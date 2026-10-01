@@ -102,8 +102,14 @@
 
 ### 1.4 Política de operación
 
-- **Formato del change log** (convención de commits): 
+- **Formato del change log** (convención de commits):
+  - Se adopta el estándar **Conventional Commits**: (): (): <descripción breve>.
+  - **Tipos permitidos:** feat (nueva configuración o protocolo), fix (corrección técnica), docs (documentación y memoria), ops (backlogs, backups y change log), chore (mantenimiento de carpetas o repo).
 - **Política de backup** (cuándo y cómo):
+  - **Cuándo:** Obligatoriamente antes de realizar cambios estructurales, antes de iniciar cada drill de failover en F4, y al cierre formal de cada hito (F1, F2, F3, F4).
+  - **Cómo:**
+    1. Respaldo en texto plano: /export file=nombre_router-fecha-fase (se guarda y versiona en git dentro de la carpeta backups/fecha/).
+    2. Respaldo binario: /system backup save name=nombre_router-fecha-fase (se almacena localmente en el router o almacenamiento local del simulador, sin subirlo al repositorio).
 
 ---
 
