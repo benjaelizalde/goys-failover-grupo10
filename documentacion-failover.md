@@ -9,13 +9,13 @@
 ## Integrantes y roles
 
 
-| Integrante | Rol                         |
-| ---------- | --------------------------- |
-|            | R1 — Líder / Edge-WAN       |
-|            | R2 — Proveedores            |
-|            | R3 — Core                   |
-|            | R4 — Distribución           |
-|            | R5 — Hosts / QA / Operación |
+| Integrante         | Rol                         |
+| ------------------ | --------------------------- |
+| Alvite Damian      | R1 — Líder / Edge-WAN       |
+| Capre Rodrigo      | R2 — Proveedores            |
+| Di Grappa Emiliano | R3 — Core                   |
+| Moscuzza Vicente   | R4 — Distribución           |
+| Elizalde Benjamin  | R5 — Hosts / QA / Operación |
 
 
 ---
@@ -31,11 +31,13 @@
 > Del diagrama "Enterprise Network Design (Cisco)", indiquen qué defectos corrigieron y justifiquen cada corrección.
 
 
-| #   | Defecto detectado | Corrección aplicada | Justificación |
-| --- | ----------------- | ------------------- | ------------- |
-| 1   |                   |                     |               |
-| 2   |                   |                     |               |
-| 3   |                   |                     |               |
+| #   | Defecto detectado                              | Corrección aplicada                                                                                                                                          | Justificación                                                                                                                                                                                  |
+| --- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Firewall sin par de Alta Disponibilidad (SPOF) | En el laboratorio el filtrado perimetral vive en el router EDGE. En entornos de producción deben implementarse dos appliances en esquema activo/standby      | Un único firewall representa un punto único de falla (SPOF): ante una caída del equipo se interrumpe toda la salida a Internet, inutilizando la redundancia provista por los dos ISP           |
+| 2   | Subredes solapadas entre sitios                | Plan IPAM con un /30 por cada enlace punto a punto y un /24 por LAN, garantizando cero solapamiento                                                          | El solapamiento genera ambigüedades en la tabla de ruteo global e impide cualquier interconexión o enrutamiento futuro entre sitios                                                            |
+| 3   | Falta de enlace directo core–core              | Se incorpora el enlace directo CORE-1 <-> CORE-2 dentro del área 0 de OSPF                                                                                   | Si cae un enlace entre el Core y la Distribución, la red queda sin camino óptimo interno; el enlace core–core evita aislamiento y previene desvíos asimétricos o caídas de tránsito            |
+| 4   | HSRP en el Core                                | Se reubica el protocolo de primer salto (FHRP) en la capa de Distribución implementando el estándar abierto VRRP, dejando el Core como tránsito puro de OSPF | Separa las funciones de la red: el Core solo transporta paquetes a alta velocidad, mientras que el gateway por defecto debe estar próximo al segmento de acceso de los usuarios y servidores   |
+| 5   | iBGP Route Reflector mal ubicado               | Se elimina el Route Reflector y se configuran sesiones eBGP directas en EDGE con cada ISP                                                                    | Con un único router de borde y dos proveedores WAN no se requiere una malla interna compleja de iBGP ni reflectores cruzando firewalls; eBGP directo en el borde simplifica el plano de contro |
 
 
 
