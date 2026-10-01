@@ -86,8 +86,17 @@
 ### 1.3 Política de seguridad
 
 - **Usuarios y privilegios:** 
+  - Usuario admin: Contraseña por defecto modificada en los 7 routers por una credencial robusta; acceso exclusivo para tareas de configuración de cada rol asignado.
+  - Usuario monitor: Grupo de permisos: read, creado exclusivamente para observabilidad, SNMP y tareas de testing de QA.
+  - Restricción de acceso de administración exclusivamente por protocolo SSH, limitando el origen a las IPs de gestión/loopbacks internas.
 - **Servicios que se deshabilitan:** 
+  - Deshabilitar en los 7 MikroTik CHR: telnet, ftp, www (HTTP), api, api-ssl y servidor bandwidth-test.
+  - Desactivar descubrimiento de vecinos (/ip neighbor discovery-settings) y MAC-Server hacia las interfaces que interconectan con el exterior (enlaces a los ISP).
 - **Claves de autenticación** (OSPF / BGP / VRRP):
+  - **OSPF:** Autenticación criptográfica MD5 (key-id=1) en todas las interfaces del Área 0 (EDGE, CORE-1, CORE-2, DIST-1, DIST-2).
+  - **BGP:** TCP-MD5 implementado de forma independiente con secretos únicos para cada sesión (EDGE ↔ ISP-1 y EDGE ↔ ISP-2).
+  - **VRRP:** Autenticación simple activada sobre VRRP v2 para los grupos VRID 10 y VRID 20.
+  - Regla de seguridad: Las contraseñas reales se manejan por un canal privado seguro del grupo, y en el repositorio y la memoria se documentan por ejemplo como KEY_OSPF_MD5, etc.
 
 
 
@@ -341,9 +350,9 @@
 
 ### Diseño (F0)
 
-- [ ] IPAM completo y sin solapamiento
-- [ ] Corrección del diagrama justificada (≥ 3 defectos)
-- [ ] Política de seguridad definida (usuarios, servicios, claves)
+- [x] IPAM completo y sin solapamiento
+- [x] Corrección del diagrama justificada (≥ 3 defectos)
+- [x] Política de seguridad definida (usuarios, servicios, claves)
 - [ ] Política de operación definida (change log + backup)
 
 
