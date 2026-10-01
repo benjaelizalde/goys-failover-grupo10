@@ -47,29 +47,41 @@
 > Completar. Regla: **cero solapamiento** — cada enlace un /30 distinto, cada LAN un /24 distinto.
 
 
-| Enlace / Red                | Subred | Dispositivo A (IP/iface) | Dispositivo B (IP/iface) |
-| --------------------------- | ------ | ------------------------ | ------------------------ |
-| ISP-1 ↔ EDGE                |        |                          |                          |
-| ISP-2 ↔ EDGE                |        |                          |                          |
-| EDGE ↔ CORE-1               |        |                          |                          |
-| EDGE ↔ CORE-2               |        |                          |                          |
-| CORE-1 ↔ CORE-2 (core-core) |        |                          |                          |
-| CORE ↔ DIST-1 (×2)          |        |                          |                          |
-| CORE ↔ DIST-2 (×2)          |        |                          |                          |
-| USERS (gateway VRRP)        |        |                          |                          |
-| SERVERS (gateway VRRP)      |        |                          |                          |
+| Enlace / Red                | Subred          | Dispositivo A (IP/iface)         | Dispositivo B (IP/iface)         |
+| --------------------------- | --------------- | -------------------------------- | -------------------------------- |
+| ISP-1 ↔ EDGE                | 192.0.2.0/30    | ISP-1: 192.0.2.1/30 (ether2)     | EDGE: 192.0.2.2/30 (ether1)      |
+| ISP-2 ↔ EDGE                | 192.0.2.4/30    | ISP-2: 192.0.2.5/30 (ether2)     | EDGE: 192.0.2.6/30 (ether2)      |
+| EDGE ↔ CORE-1               | 10.0.0.0/30     | EDGE: 10.0.0.1/30 (ether3)       | CORE-1: 10.0.0.2/30 (ether1)     |
+| EDGE ↔ CORE-2               | 10.0.0.4/30     | EDGE: 10.0.0.5/30 (ether4)       | CORE-2: 10.0.0.6/30 (ether1)     |
+| CORE-1 ↔ CORE-2 (core-core) | 10.0.0.8/30     | CORE-1: 10.0.0.9/30 (ether2)     | CORE-2: 10.0.0.10/30 (ether2)    |
+| CORE 1 ↔ DIST-1 (enlace 1)  | 10.0.0.12/30    | CORE-1: 10.0.0.13/30 (ether3)    | DIST-1: 10.0.0.14/30 (ether1)    |
+| CORE 2 ↔ DIST-1 (enlace 2)  | 10.0.0.20/30    | CORE-2: 10.0.0.21/30 (ether3)    | DIST-1: 10.0.0.22/30 (ether2)    |
+| CORE 1 ↔ DIST-2 (enlace 1)  | 10.0.0.16/30    | CORE-1: 10.0.0.17/30 (ether4)    | DIST-2: 10.0.0.18/30 (ether1)    |
+| CORE 2 ↔ DIST-2 (enlace 2)  | 10.0.0.24/30    | CORE-2: 10.0.0.25/30 (ether4)    | DIST-2: 10.0.0.26/30 (ether2)    |
+| USERS (gateway VRRP)        | 192.168.10.0/24 | DIST-1: 192.168.10.2/24 (ether3) | DIST-2: 192.168.10.3/24 (ether3) |
+| SERVERS (gateway VRRP)      | 192.168.20.0/24 | DIST-1: 192.168.20.2/24 (ether4) | DIST-2: 192.168.20.3/24 (ether4) |
 
 
 **VRRP:**
 
 
-| Grupo   | VRID | Master | Priority | IP virtual |
-| ------- | ---- | ------ | -------- | ---------- |
-| USERS   |      |        |          |            |
-| SERVERS |      |        |          |            |
+| Grupo   | VRID | Master | Priority                      | IP virtual   |
+| ------- | ---- | ------ | ----------------------------- | ------------ |
+| USERS   | 10   | DIST-1 | 200 (Backup: DIST-2 prio 100) | 192.168.10.1 |
+| SERVERS | 20   | DIST-2 | 200 (Backup: DIST-1 prio 100) | 192.168.20.1 |
 
 
 **Router-IDs:** 
+
+- **ISP-1:** 198.51.100.1 (AS 65001)
+- **ISP-2:** 198.51.100.2 (AS 65002)
+- **EDGE:** 10.255.0.1 (AS 65000)
+- **CORE-1:** 10.255.0.11
+- **CORE-2:** 10.255.0.12
+- **DIST-1:** 10.255.0.21
+- **DIST-2:** 10.255.0.22
+
+
 
 ### 1.3 Política de seguridad
 
