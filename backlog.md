@@ -113,27 +113,27 @@
 
 ### VRRP (2 grupos, load-sharing, auth)
 
-- [ ] [R4] configurar VRRP vrid 10 en DIST-1 (master)
-- [ ] [R4] configurar VRRP vrid 20 en DIST-2 (master)
-- [ ] [R4] activar auth simple en ambos grupos
-- [ ] [R5] verificar master/backup con `/interface vrrp print`
+- [x] [R4] configurar VRRP vrid 10 en DIST-1 (master)
+- [x] [R4] configurar VRRP vrid 20 en DIST-2 (master)
+- [x] [R4] activar auth simple en ambos grupos
+- [x] [R5] verificar master/backup con `/interface vrrp print`
 
 
 
 ### OSPF área 0 (con MD5, incluido core–core)
 
-- [ ] [R3] OSPF + MD5 en CORE-1 y CORE-2 (incluido enlace core–core)
-- [ ] [R4] OSPF + MD5 en DIST-1 y DIST-2
-- [ ] [R1] OSPF + MD5 en EDGE (hacia CORE-1/2)
-- [ ] [R5] verificar adyacencias FULL con `/routing/ospf/neighbor print`
+- [x] [R3] OSPF + MD5 en CORE-1 y CORE-2 (incluido enlace core–core)
+- [x] [R4] OSPF + MD5 en DIST-1 y DIST-2
+- [x] [R1] OSPF + MD5 en EDGE (hacia CORE-1/2)
+- [x] [R5] verificar adyacencias FULL con `/routing/ospf/neighbor print`
 
 
 
 ### Verificación L3 (ping intra-LAN + gateway virtual)
 
-- [ ] [R5] ping PC-USER ↔ SRV
-- [ ] [R5] ping al gateway virtual de cada LAN
-- [ ] [R5] backup post-F2 y registro en change log
+- [x] [R5] ping PC-USER ↔ SRV
+- [x] [R5] ping al gateway virtual de cada LAN
+- [x] [R5] actualizar memoria y registro en change log
 
 ---
 

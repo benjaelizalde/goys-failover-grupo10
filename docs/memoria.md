@@ -221,10 +221,12 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 ### 4.1 Conectividad básica
 
 
-| Prueba                         | Comando | Resultado |
-| ------------------------------ | ------- | --------- |
-| ping intra-LAN (PC-USER ↔ SRV) |         |           |
-| traceroute a ISP (loopback)    |         |           |
+| Prueba                         | Comando                                    | Resultado                                                                                                   |
+| ------------------------------ | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| ping intra-LAN (PC-USER ↔ SRV) | `ping -c 4 192.168.20.100` (desde PC-USER) | Exitoso (0% packet loss). El tráfico pasa por el gateway VRRP, sube a la Distribución y baja a la otra LAN. |
+| ping a gateway virtual USERS   | `ping -c 4 192.168.10.1` (desde PC-USER)   | Exitoso (0% packet loss). Responde DIST-1 (Master VRID 10).                                                 |
+| ping a gateway virtual SERVERS | `ping -c 4 192.168.20.1` (desde SRV)       | Exitoso (0% packet loss). Responde DIST-2 (Master VRID 20).                                                 |
+| traceroute a ISP (loopback)    |                                            |                                                                                                             |
 
 
 > Pegar capturas de las tablas: `/routing/route/print`, `/interface/vrrp/print`, `/routing/bgp/session/print`.
@@ -313,23 +315,31 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 ### 6.1 Change log
 
 
-| Fecha      | Responsable           | Cambio                                                                              | Motivo                          | Cómo se revierte             |
-| ---------- | --------------------- | ----------------------------------------------------------------------------------- | ------------------------------- | ---------------------------- |
-| 08/10/2026 | R4 Moscuzza Vicente   | `ops(backup): backup post-F1 de DIST-1 y DIST-2`                                    | Despliegue F1 capa Distribución | Restaurar snapshot `BASE_F1` |
-| 08/10/2026 | R3 Di Grappa Emiliano | `ops(backup): agregar CORE1 y CORE2`                                                | Despliegue F1 capa Core         | Restaurar snapshot `BASE_F1` |
-| 08/10/2026 | R2 Capre Rodrigo      | `ops(backups): agrego ISPs`                                                         | Despliegue F1 proveedores       | Restaurar snapshot `BASE_F1` |
-| 09/10/2026 | R1 Alvite Damian      | `ops(backups): agrego la configuracion del router EDGE`                             | Despliegue F1 nodo EDGE         | Restaurar snapshot `BASE_F1` |
-| 09/10/2026 | R5 Elizalde Benjamin  | `docs(memoria): actualiza memoria a F1 con topologia, change log y restore probado` | Memoria de Fase 1               | N/A (punto de recuperación)  |
-| 09/10/2026 | R5 Elizalde Benjamin  | `ops(backlog): snapshot BASE y actualizo backlog F1 a done`                         | Cierre de Fase 1                | N/A (punto de recuperación)  |
+| Fecha      | Responsable           | Cambio                                                                              | Motivo                                       | Cómo se revierte             |
+| ---------- | --------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------- | ---------------------------- |
+| 08/10/2026 | R4 Moscuzza Vicente   | `ops(backup): backup post-F1 de DIST-1 y DIST-2`                                    | Despliegue F1 capa Distribución              | Restaurar snapshot `BASE_F1` |
+| 08/10/2026 | R3 Di Grappa Emiliano | `ops(backup): agregar CORE1 y CORE2`                                                | Despliegue F1 capa Core                      | Restaurar snapshot `BASE_F1` |
+| 08/10/2026 | R2 Capre Rodrigo      | `ops(backups): agrego ISPs`                                                         | Despliegue F1 proveedores                    | Restaurar snapshot `BASE_F1` |
+| 09/10/2026 | R1 Alvite Damian      | `ops(backups): agrego la configuracion del router EDGE`                             | Despliegue F1 nodo EDGE                      | Restaurar snapshot `BASE_F1` |
+| 09/10/2026 | R5 Elizalde Benjamin  | `docs(memoria): actualiza memoria a F1 con topologia, change log y restore probado` | Memoria de Fase 1                            | N/A (punto de recuperación)  |
+| 09/10/2026 | R5 Elizalde Benjamin  | `ops(backlog): snapshot BASE y actualizo backlog F1 a done`                         | Cierre de Fase 1                             | N/A (punto de recuperación)  |
+| 15/10/2026 | R4 Moscuzza Vicente   | `feat(dist): configuro VRRP v2 con auth y OSPF MD5 en DIST-1 y DIST-2`              | Gateways virtuales activos y ruteo interno   | Restaurar snapshot `BASE_F1` |
+| 15/10/2026 | R3 Di Grappa Emiliano | `feat(core): configuro OSPF MD5 en area 0 y enlace core-core`                       | Habilitar tránsito IGP seguro en Core        | Restaurar snapshot `BASE_F1` |
+| 15/10/2026 | R5 Elizalde Benjamin  | `fix(core): acomodo espacio de nombres en los archivos de CORE-2`                   | Arreglar nombres de archivos                 | N/A                          |
+| 15/10/2026 | R1 Alvite Damian      | `feat(edge): configuro OSPF MD5 hacia la capa Core`                                 | Anuncio de rutas internas al router de borde | Restaurar snapshot `BASE_F1` |
+| 15/10/2026 | R5 Elizalde Benjamin  | `docs(capturas): agrego evidencias de adyacencias OSPF, VRRP y pings L3`            | Pruebas de aceptación F2                     | N/A                          |
+| 15/10/2026 | R5 Elizalde Benjamin  | `docs: actualizo change log, backlog y cierro hito F2 a done`                       | Respaldo y cierre formal de Fase 2           | Restaurar snapshot `F2`      |
 
 
 
 
 ### 6.2 Backups
 
-- **Snapshot BASE:** generado en GNS3 con el nombre `BASE_F1`, fecha 08/10/2026. 
-- **Exports:** versionados en el repositorio en `backups/2026-10-08/` (`ISP1-20261008-F1.rsc`, `ISP2-20261008-F1.rsc`, `EDGE-20261009-F1.rsc`, `CORE1-20261008-F1.rsc`, `CORE2-20261008-F1.rsc`, `DIST1-20261008-F1.rsc`, `DIST-2-20261008-F1.rsc`). 
+- **Snapshot BASE:** generado en GNS3 con el nombre `BASE-F1`, fecha 08/10/2026. 
+- **Exports Fase 1 (08/10/2026):** versionados en el repositorio en `backups/2026-10-08/` (`ISP1-20261008-F1.rsc`, `ISP2-20261008-F1.rsc`, `EDGE-20261009-F1.rsc`, `CORE1-20261008-F1.rsc`, `CORE2-20261008-F1.rsc`, `DIST1-20261008-F1.rsc`, `DIST-2-20261008-F1.rsc`). 
 - **Prueba de restore:** Se ejecutó en el nodo `DIST-2`. Se forzó un reinicio limpio sin configuración por defecto `/system reset-configuration no-defaults=yes`) y se ejecutó la restauración vía `/import file=DIST2-20261008-F1.rsc`. Se verificó que se restablecieron íntegramente las direcciones IP en interfaces físicas y loopback, el usuario `monitor`, las restricciones SSH y el apagado de servicios inseguros, confirmando la validez de los backups.
+- **Snapshot F2:** generado en GNS3 con el nombre `F2`, fecha 15/10/2026 tras verificar la convergencia completa de OSPF y los grupos VRRP en estado operativo.
+- **Exports Fase 2 (15/10/2026):** versionados en el repositorio en la carpeta `backups/2026-10-15/` `EDGE-20261015-F2.rsc`, `CORE1-20261015-F2.rsc`, `CORE2-20261015-F2.rsc`, `DIST1-20261015-F2.rsc`, `DIST2-20261015-F2.rsc`).
 
 
 
@@ -387,8 +397,8 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 ### Redes
 
 - [x] 7 CHR + 2 switches + 2 hosts levantados y cableados
-- [ ] VRRP operativo (2 grupos, load-sharing)
-- [ ] OSPF área 0 con adyacencias (incluido core–core)
+- [x] VRRP operativo (2 grupos, load-sharing)
+- [x] OSPF área 0 con adyacencias (incluido core–core)
 - [ ] BGP eBGP ×2 establecido (multi-homing)
 - [ ] Los 5 drills ejecutados y documentados (runbook + post-mortem + tiempo)
 
@@ -397,9 +407,9 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 ### Seguridad
 
 - [x] Hardening aplicado (password, usuario mínimo, servicios apagados)
-- [ ] OSPF MD5 funcionando
+- [x] OSPF MD5 funcionando
 - [ ] BGP TCP-MD5 funcionando
-- [ ] VRRP auth funcionando
+- [x] VRRP auth funcionando
 - [ ] Firewall edge aplicado
 - [ ] Prueba con clave incorrecta → debe **fallar** (documentado)
 
