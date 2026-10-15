@@ -16,8 +16,6 @@ add address=10.0.0.6/30 comment=to-EDGE interface=ether1 network=10.0.0.4
 add address=10.0.0.10/30 comment=to-CORE-1 interface=ether2 network=10.0.0.8
 add address=10.0.0.21/30 comment=to-DIST-1 interface=ether3 network=10.0.0.20
 add address=10.0.0.25/30 comment=to-DIST-2 interface=ether4 network=10.0.0.24
-/ip dhcp-client
-add interface=ether1
 /ip service
 set ftp disabled=yes
 set ssh address=10.255.0.0/24,192.168.20.100/32

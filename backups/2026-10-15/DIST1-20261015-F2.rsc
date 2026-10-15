@@ -21,8 +21,6 @@ add address=192.168.10.2/24 comment=LAN-USERS interface=ether3 network=192.168.1
 add address=192.168.20.2/24 comment=LAN-SERVERS interface=ether4 network=192.168.20.0
 add address=192.168.10.1 interface=vrrp-users network=192.168.10.1
 add address=192.168.20.1 interface=vrrp-servers network=192.168.20.1
-/ip dhcp-client
-add interface=ether1
 /ip service
 set ftp disabled=yes
 set ssh address=10.255.0.0/24,192.168.20.100/32

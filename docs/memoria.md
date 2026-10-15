@@ -329,6 +329,9 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 | 15/10/2026 | R1 Alvite Damian      | `feat(edge): configuro OSPF MD5 hacia la capa Core`                                 | Anuncio de rutas internas al router de borde | Restaurar snapshot `BASE_F1` |
 | 15/10/2026 | R5 Elizalde Benjamin  | `docs(capturas): agrego evidencias de adyacencias OSPF, VRRP y pings L3`            | Pruebas de aceptación F2                     | N/A                          |
 | 15/10/2026 | R5 Elizalde Benjamin  | `docs: actualizo change log, backlog y cierro hito F2 a done`                       | Respaldo y cierre formal de Fase 2           | Restaurar snapshot `F2`      |
+| 15/10/2026 | R2 Capre Rodrigo      | `fix(isp): elimino dhcp-client de fábrica y regenero exports de los ISPs`           | Regenerar exports ISP                        | Restaurar snapshot `BASE_F1` |
+| 15/10/2026 | R1 Alvite Damian      | `fix(edge): elimino dhcp-client de fábrica y regenero export del EDGE`              | Regenerar export EDGE                        | Restaurar snapshot `BASE_F1` |
+| 15/10/2026 | R5 Elizalde Benjamin  | `fix(hardening): remuevo dhcp-client del resto de routers y regenero los exports`   | Regenerar exports                            | Restaurar snapshot `BASE_F1` |
 
 
 
