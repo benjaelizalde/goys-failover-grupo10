@@ -189,11 +189,11 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 
 #### Drill 1 — VRRP: se cae el gateway
 
-- **Detección:**
-- **Respuesta:**
-- **Recuperación:**
-- **Tiempo medido:**
-- **Post-mortem** (¿por qué funcionó? ¿qué aprendieron?):
+- **Detección:** Interrupción intencional del Master DIST-1 en VRID 10. PC-USER registra corte transitorio de tráfico.
+- **Respuesta:** DIST-2 detecta la ausencia de paquetes Hello tras el dead-timer y conmuta su estado de `B` a `RM`, asumiendo el reenvío de la IP virtual `192.168.10.1`.
+- **Recuperación:** Al rehabilitar DIST-1, su prioridad 200 fuerza el preemption, reasumiendo el rol Master y devolviendo a DIST-2 al rol Backup sin pérdidas observables.
+- **Tiempo medido:** ~1 segundo (1 ping perdido en la secuencia de PC-USER).
+- **Post-mortem** (¿por qué funcionó? ¿qué aprendieron?): La asignación determinística de prioridades (200 en DIST-1 vs 100 en DIST-2) junto con la difusión de Gratuitous ARP aseguró que la tabla de conmutación L2 aprendiera la nueva ubicación de la MAC virtual de forma casi instantánea.
 
 #### Drill 2 — OSPF: se corta el camino interno
 
@@ -246,27 +246,29 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 
 ### 6.1 Change log
 
-| Fecha      | Responsable           | Cambio                                                                              | Motivo                                       | Cómo se revierte             |
-| ---------- | --------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------- | ---------------------------- |
-| 08/10/2026 | R4 Moscuzza Vicente   | `ops(backup): backup post-F1 de DIST-1 y DIST-2`                                    | Despliegue F1 capa Distribución              | Restaurar snapshot `BASE_F1` |
-| 08/10/2026 | R3 Di Grappa Emiliano | `ops(backup): agregar CORE1 y CORE2`                                                | Despliegue F1 capa Core                      | Restaurar snapshot `BASE_F1` |
-| 08/10/2026 | R2 Capre Rodrigo      | `ops(backups): agrego ISPs`                                                         | Despliegue F1 proveedores                    | Restaurar snapshot `BASE_F1` |
-| 09/10/2026 | R1 Alvite Damian      | `ops(backups): agrego la configuracion del router EDGE`                             | Despliegue F1 nodo EDGE                      | Restaurar snapshot `BASE_F1` |
-| 09/10/2026 | R5 Elizalde Benjamin  | `docs(memoria): actualiza memoria a F1 con topologia, change log y restore probado` | Memoria de Fase 1                            | N/A (punto de recuperación)  |
-| 09/10/2026 | R5 Elizalde Benjamin  | `ops(backlog): snapshot BASE y actualizo backlog F1 a done`                         | Cierre de Fase 1                             | N/A (punto de recuperación)  |
-| 15/10/2026 | R4 Moscuzza Vicente   | `feat(dist): configuro VRRP v2 con auth y OSPF MD5 en DIST-1 y DIST-2`              | Gateways virtuales activos y ruteo interno   | Restaurar snapshot `BASE_F1` |
-| 15/10/2026 | R3 Di Grappa Emiliano | `feat(core): configuro OSPF MD5 en area 0 y enlace core-core`                       | Habilitar tránsito IGP seguro en Core        | Restaurar snapshot `BASE_F1` |
-| 15/10/2026 | R5 Elizalde Benjamin  | `fix(core): acomodo espacio de nombres en los archivos de CORE-2`                   | Arreglar nombres de archivos                 | N/A                          |
-| 15/10/2026 | R1 Alvite Damian      | `feat(edge): configuro OSPF MD5 hacia la capa Core`                                 | Anuncio de rutas internas al router de borde | Restaurar snapshot `BASE_F1` |
-| 15/10/2026 | R5 Elizalde Benjamin  | `docs(capturas): agrego evidencias de adyacencias OSPF, VRRP y pings L3`            | Pruebas de aceptación F2                     | N/A                          |
-| 15/10/2026 | R5 Elizalde Benjamin  | `docs: actualizo change log, backlog y cierro hito F2 a done`                       | Respaldo y cierre formal de Fase 2           | Restaurar snapshot `F2`      |
-| 15/10/2026 | R2 Capre Rodrigo      | `fix(isp): elimino dhcp-client de fábrica y regenero exports de los ISPs`           | Regenerar exports ISP                        | Restaurar snapshot `BASE_F1` |
-| 15/10/2026 | R1 Alvite Damian      | `fix(edge): elimino dhcp-client de fábrica y regenero export del EDGE`              | Regenerar export EDGE                        | Restaurar snapshot `BASE_F1` |
-| 15/10/2026 | R5 Elizalde Benjamin  | `fix(hardening): remuevo dhcp-client del resto de routers y regenero los exports`   | Regenerar exports                            | Restaurar snapshot `BASE_F1` |
-| 22/10/2026 | R1 Alvite Damian      | `feat(edge): configuro eBGP dual-homing, redistribución y firewall`    | Borde redundante, inyección default y filtro | Restaurar snapshot `F2`     |
-| 22/10/2026 | R2 Capre Rodrigo      | `feat(isps): configuro eBGP, default-originate y anuncio de loopbacks` | Conectividad WAN y salida a Internet         | Restaurar snapshot `F2`     |
-| 22/10/2026 | R5 Elizalde Benjamin  | `docs(capturas): agrego evidencias de eBGP, traceroute y firewall`    | Validación L3 y verificación de F3           | N/A                         |
-| 22/10/2026 | R5 Elizalde Benjamin  | `docs(memoria): actualizo change log, conectividad y cierro hito F3`   | Respaldo y cierre formal de Fase 3           | Restaurar snapshot `F3`     |
+| Fecha      | Responsable           | Cambio                                                                              | Motivo                                       | Cómo se revierte                   |
+| ---------- | --------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------- | ---------------------------------- |
+| 08/10/2026 | R4 Moscuzza Vicente   | `ops(backup): backup post-F1 de DIST-1 y DIST-2`                                    | Despliegue F1 capa Distribución              | Restaurar snapshot `BASE_F1`       |
+| 08/10/2026 | R3 Di Grappa Emiliano | `ops(backup): agregar CORE1 y CORE2`                                                | Despliegue F1 capa Core                      | Restaurar snapshot `BASE_F1`       |
+| 08/10/2026 | R2 Capre Rodrigo      | `ops(backups): agrego ISPs`                                                         | Despliegue F1 proveedores                    | Restaurar snapshot `BASE_F1`       |
+| 09/10/2026 | R1 Alvite Damian      | `ops(backups): agrego la configuracion del router EDGE`                             | Despliegue F1 nodo EDGE                      | Restaurar snapshot `BASE_F1`       |
+| 09/10/2026 | R5 Elizalde Benjamin  | `docs(memoria): actualiza memoria a F1 con topologia, change log y restore probado` | Memoria de Fase 1                            | N/A (punto de recuperación)        |
+| 09/10/2026 | R5 Elizalde Benjamin  | `ops(backlog): snapshot BASE y actualizo backlog F1 a done`                         | Cierre de Fase 1                             | N/A (punto de recuperación)        |
+| 15/10/2026 | R4 Moscuzza Vicente   | `feat(dist): configuro VRRP v2 con auth y OSPF MD5 en DIST-1 y DIST-2`              | Gateways virtuales activos y ruteo interno   | Restaurar snapshot `BASE_F1`       |
+| 15/10/2026 | R3 Di Grappa Emiliano | `feat(core): configuro OSPF MD5 en area 0 y enlace core-core`                       | Habilitar tránsito IGP seguro en Core        | Restaurar snapshot `BASE_F1`       |
+| 15/10/2026 | R5 Elizalde Benjamin  | `fix(core): acomodo espacio de nombres en los archivos de CORE-2`                   | Arreglar nombres de archivos                 | N/A                                |
+| 15/10/2026 | R1 Alvite Damian      | `feat(edge): configuro OSPF MD5 hacia la capa Core`                                 | Anuncio de rutas internas al router de borde | Restaurar snapshot `BASE_F1`       |
+| 15/10/2026 | R5 Elizalde Benjamin  | `docs(capturas): agrego evidencias de adyacencias OSPF, VRRP y pings L3`            | Pruebas de aceptación F2                     | N/A                                |
+| 15/10/2026 | R5 Elizalde Benjamin  | `docs: actualizo change log, backlog y cierro hito F2 a done`                       | Respaldo y cierre formal de Fase 2           | Restaurar snapshot `F2`            |
+| 15/10/2026 | R2 Capre Rodrigo      | `fix(isp): elimino dhcp-client de fábrica y regenero exports de los ISPs`           | Regenerar exports ISP                        | Restaurar snapshot `BASE_F1`       |
+| 15/10/2026 | R1 Alvite Damian      | `fix(edge): elimino dhcp-client de fábrica y regenero export del EDGE`              | Regenerar export EDGE                        | Restaurar snapshot `BASE_F1`       |
+| 15/10/2026 | R5 Elizalde Benjamin  | `fix(hardening): remuevo dhcp-client del resto de routers y regenero los exports`   | Regenerar exports                            | Restaurar snapshot `BASE_F1`       |
+| 22/10/2026 | R1 Alvite Damian      | `feat(edge): configuro eBGP dual-homing, redistribución y firewall`                 | Borde redundante, inyección default y filtro | Restaurar snapshot `F2`            |
+| 22/10/2026 | R2 Capre Rodrigo      | `feat(isps): configuro eBGP, default-originate y anuncio de loopbacks`              | Conectividad WAN y salida a Internet         | Restaurar snapshot `F2`            |
+| 22/10/2026 | R5 Elizalde Benjamin  | `docs(capturas): agrego evidencias de eBGP, traceroute y firewall`                  | Validación L3 y verificación de F3           | N/A                                |
+| 22/10/2026 | R5 Elizalde Benjamin  | `docs(memoria): actualizo change log, conectividad y cierro hito F3`                | Respaldo y cierre formal de Fase 3           | Restaurar snapshot `F3`            |
+| 22/10/2026 | R3 Di Grappa Emiliano | `docs(drill1): runbook de failover VRRP por R3`               | Drill 1                                      | Restaurar snapshot `F4-PRE-DRILLS` |
+| 22/10/2026 | R5 Elizalde Benjamin | `docs: actualizo asignacion de drills F4 con rotacion de roles`               | Actualizar memoria y backlog                                      | N/A  |
 
 ### 6.2 Backups
 

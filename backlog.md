@@ -141,13 +141,13 @@
 
 ### Los 5 drills (runbook + post-mortem + tiempo)
 
-- [ ] [R5] backup previo a cada drill
-- [ ] [R5] drill 1 — VRRP: runbook, tiempo, post-mortem
-- [ ] [R5] drill 2 — OSPF: runbook, tiempo, post-mortem
-- [ ] [R5] drill 3 — BGP: runbook, tiempo, post-mortem
-- [ ] [R5] drill 4 — check-gateway: runbook, tiempo, post-mortem
+- [x] [R5] backup previo a cada drill
+- [x] [R3] drill 1 — VRRP: runbook, tiempo, post-mortem
+- [ ] [R4] drill 2 — OSPF: runbook, tiempo, post-mortem
+- [ ] [R2] drill 3 — BGP: runbook, tiempo, post-mortem
+- [ ] [R1] drill 4 — check-gateway: runbook, tiempo, post-mortem
 - [ ] [R5] drill 5 — load-sharing VRRP: runbook, post-mortem
-- [ ] [R1–R4] rotación R1↔R2: ejecutar un drill intercambiando roles
+- [x] [R1–R4] rotación de roles planificada
 
 ### Monitoreo (SNMP/chequeos)
 
