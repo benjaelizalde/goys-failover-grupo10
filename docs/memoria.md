@@ -8,7 +8,6 @@
 
 ## Integrantes y roles
 
-
 | Integrante         | Rol                         |
 | ------------------ | --------------------------- |
 | Alvite Damian      | R1 — Líder / Edge-WAN       |
@@ -17,19 +16,13 @@
 | Moscuzza Vicente   | R4 — Distribución           |
 | Elizalde Benjamin  | R5 — Hosts / QA / Operación |
 
-
 ---
 
-
-
 ## 1. Diseño (F0)
-
-
 
 ### 1.1 Corrección del diagrama
 
 > Del diagrama "Enterprise Network Design (Cisco)", indiquen qué defectos corrigieron y justifiquen cada corrección.
-
 
 | #   | Defecto detectado                              | Corrección aplicada                                                                                                                                          | Justificación                                                                                                                                                                                                                                        |
 | --- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -39,13 +32,9 @@
 | 4   | HSRP en el Core                                | Se reubica el protocolo de primer salto (FHRP) en la capa de Distribución implementando el estándar abierto VRRP, dejando el Core como tránsito puro de OSPF | Separa las funciones de la red: el Core solo transporta paquetes a alta velocidad, mientras que el gateway por defecto debe estar próximo al segmento de acceso de los usuarios y servidores                                                         |
 | 5   | iBGP Route Reflector mal ubicado               | Se elimina el Route Reflector y se configuran sesiones eBGP directas en EDGE con cada ISP                                                                    | Con un único router de borde y dos proveedores WAN no se requiere una malla interna de iBGP ni reflectores; eBGP directo en el borde simplifica el plano de control, reduce la superficie de falla y mantiene la política de salida en un solo punto |
 
-
-
-
 ### 1.2 Plan de direccionamiento (IPAM)
 
 > Completar. Regla: **cero solapamiento** — cada enlace un /30 distinto, cada LAN un /24 distinto.
-
 
 | Enlace / Red                | Subred          | Dispositivo A (IP/iface)         | Dispositivo B (IP/iface)         |
 | --------------------------- | --------------- | -------------------------------- | -------------------------------- |
@@ -61,29 +50,23 @@
 | USERS (gateway VRRP)        | 192.168.10.0/24 | DIST-1: 192.168.10.2/24 (ether3) | DIST-2: 192.168.10.3/24 (ether3) |
 | SERVERS (gateway VRRP)      | 192.168.20.0/24 | DIST-1: 192.168.20.2/24 (ether4) | DIST-2: 192.168.20.3/24 (ether4) |
 
-
 > Nota: el `ether2` de ISP-1 e ISP-2 queda reservado para el enlace a la nube del simulador (Cloud1/Cloud2), fuera del direccionamiento del laboratorio.
 
 **Hosts:**
-
 
 | Host    | IP                | Gateway (VRRP) |
 | ------- | ----------------- | -------------- |
 | PC-USER | 192.168.10.100/24 | 192.168.10.1   |
 | SRV     | 192.168.20.100/24 | 192.168.20.1   |
 
-
 **VRRP:**
-
 
 | Grupo   | VRID | Master | Priority                      | IP virtual   |
 | ------- | ---- | ------ | ----------------------------- | ------------ |
 | USERS   | 10   | DIST-1 | 200 (Backup: DIST-2 prio 100) | 192.168.10.1 |
 | SERVERS | 20   | DIST-2 | 200 (Backup: DIST-1 prio 100) | 192.168.20.1 |
 
-
 **Router-IDs y loopbacks:** cada router tiene una interfaz `lo` (bridge sin puertos, tipo loopback) con una IP /32 igual a su router-id. Esa IP se usa como router-id de OSPF/BGP, como destino de las pruebas (traceroute al loopback del ISP) y como origen permitido para la gestión.
-
 
 | Nodo   | Router-ID / Loopback | Máscara | AS    |
 | ------ | -------------------- | ------- | ----- |
@@ -94,9 +77,6 @@
 | CORE-2 | 10.255.0.12          | /32     | —     |
 | DIST-1 | 10.255.0.21          | /32     | —     |
 | DIST-2 | 10.255.0.22          | /32     | —     |
-
-
-
 
 ### 1.3 Política de seguridad
 
@@ -113,8 +93,6 @@
   - **VRRP:** autenticación simple activada sobre VRRP v2 para los grupos VRID 10 y VRID 20.
   - Regla de seguridad: las contraseñas reales se manejan por un canal privado seguro del grupo; en el repositorio y la memoria se documentan con marcadores, por ejemplo `KEY_OSPF_MD5`, `KEY_BGP_ISP1`, `KEY_VRRP_10`.
 
-
-
 ### 1.4 Política de operación
 
 - **Formato del change log** (convención de commits):
@@ -130,8 +108,6 @@
 
 ---
 
-
-
 ## 2. Topología
 
 Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE, DISTRIBUTION, ACCESS):
@@ -140,13 +116,9 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 
 ---
 
-
-
 ## 3. Configuración
 
 > Un bloque por dispositivo. Se puede referenciar el archivo `.rsc` del repo y pegar el contenido final.
-
-
 
 ### 3.1 ISP-1
 
@@ -154,15 +126,11 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 <!-- config final -->
 ```
 
-
-
 ### 3.2 ISP-2
 
 ```routeros
 <!-- config final -->
 ```
-
-
 
 ### 3.3 EDGE
 
@@ -170,15 +138,11 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 <!-- config final -->
 ```
 
-
-
 ### 3.4 CORE-1
 
 ```routeros
 <!-- config final -->
 ```
-
-
 
 ### 3.5 CORE-2
 
@@ -186,23 +150,17 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 <!-- config final -->
 ```
 
-
-
 ### 3.6 DIST-1
 
 ```routeros
 <!-- config final -->
 ```
 
-
-
 ### 3.7 DIST-2
 
 ```routeros
 <!-- config final -->
 ```
-
-
 
 ### 3.8 Hosts (PC-USER / SRV)
 
@@ -212,32 +170,22 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 
 ---
 
-
-
 ## 4. Verificación
 
-
-
 ### 4.1 Conectividad básica
-
 
 | Prueba                         | Comando                                    | Resultado                                                                                                   |
 | ------------------------------ | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
 | ping intra-LAN (PC-USER ↔ SRV) | `ping -c 4 192.168.20.100` (desde PC-USER) | Exitoso (0% packet loss). El tráfico pasa por el gateway VRRP, sube a la Distribución y baja a la otra LAN. |
 | ping a gateway virtual USERS   | `ping -c 4 192.168.10.1` (desde PC-USER)   | Exitoso (0% packet loss). Responde DIST-1 (Master VRID 10).                                                 |
 | ping a gateway virtual SERVERS | `ping -c 4 192.168.20.1` (desde SRV)       | Exitoso (0% packet loss). Responde DIST-2 (Master VRID 20).                                                 |
-| traceroute a ISP (loopback)    |                                            |                                                                                                             |
+| traceroute a ISP (loopback)    | `traceroute 198.51.100.1` (desde PC-USER)  | Exitoso (4 saltos: DIST-1 192.168.10.2 → CORE-1 10.0.0.13 → EDGE 10.0.0.5 → ISP-1 198.51.100.1). Pings a 198.51.100.1 e 198.51.100.2 con 0% packet loss. |
 
-
-> Pegar capturas de las tablas: `/routing/route/print`, `/interface/vrrp/print`, `/routing/bgp/session/print`.
-
-
+> Capturas archivadas en `capturas/2026-10-22/`: sesiones BGP en estado `Established` (`E`), tablas `/ip route print` con flags `DAb` y `DAo+` (ECMP), salidas de ping y traceroute desde PC-USER, y drop de SSH en EDGE desde la WAN.
 
 ### 4.2 Los 5 drills de failover
 
 > Para cada drill, documentar con la estructura **detección → respuesta → recuperación → post-mortem** y el **tiempo medido**.
-
-
 
 #### Drill 1 — VRRP: se cae el gateway
 
@@ -247,8 +195,6 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 - **Tiempo medido:**
 - **Post-mortem** (¿por qué funcionó? ¿qué aprendieron?):
 
-
-
 #### Drill 2 — OSPF: se corta el camino interno
 
 - **Detección:**
@@ -256,8 +202,6 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 - **Recuperación:**
 - **Tiempo medido:**
 - **Post-mortem:**
-
-
 
 #### Drill 3 — BGP: se cae el proveedor
 
@@ -267,8 +211,6 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 - **Tiempo medido:**
 - **Post-mortem:**
 
-
-
 #### Drill 4 — check-gateway: failover estático de enlace
 
 - **Detección:**
@@ -276,8 +218,6 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 - **Recuperación:**
 - **Tiempo medido:**
 - **Post-mortem:**
-
-
 
 #### Drill 5 — Load-sharing VRRP: ambos DIST activos
 
@@ -288,32 +228,23 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 
 ---
 
-
-
 ## 5. Seguridad aplicada
-
 
 | Mecanismo                      | Dónde se aplicó                                                | Verificación (¿cómo probaron que funciona?)                                                                                                                                |
 | ------------------------------ | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Hardening (usuarios/servicios) | Los 7 CHR (ISP-1, ISP-2, EDGE, CORE-1, CORE-2, DIST-1, DIST-2) | Servicios telnet, ftp, www, api y api-ssl deshabilitados (`/ip service print`); usuario `monitor` (grupo `read`) sin permisos de escritura; `admin` con contraseña robusta |
-| OSPF MD5                       |                                                                |                                                                                                                                                                            |
-| BGP TCP-MD5                    |                                                                |                                                                                                                                                                            |
-| VRRP auth                      |                                                                |                                                                                                                                                                            |
-| Firewall/ACL (edge)            |                                                                |                                                                                                                                                                            |
-
+| Hardening (usuarios/servicios) | Los 7 CHR (ISP-1, ISP-2, EDGE, CORE-1, CORE-2, DIST-1, DIST-2) | Servicios telnet, ftp, www, api y api-ssl deshabilitados (`/ip service print`); usuario `monitor` (grupo `read`) sin permisos de escritura; `admin` con contraseña robusta. dhcp-client eliminado en los 7 routers. |
+| OSPF MD5                       | Área 0 (EDGE, CORE-1, CORE-2, DIST-1, DIST-2)                  | Adyacencias en estado Full en `/routing/ospf/neighbor/print`. Autenticación criptográfica con key-id=1 en plantillas ptp.                                                  |
+| BGP TCP-MD5                    | Sesiones eBGP (EDGE ↔ ISP-1 y EDGE ↔ ISP-2)                    | Sesiones en estado Established (`E`) en `/routing/bgp/session/print`. Claves TCP-MD5 independientes configuradas por conexión.                                             |
+| VRRP auth                      | Interfaces LAN en DIST-1 y DIST-2                              | Grupos VRID 10 y 20 operativos con flags `RM` y `B` usando autenticación simple (password).                                                                                |
+| Firewall/ACL (edge)            | Router EDGE (cadenas input y forward)                          | Filtro input descarta tráfico no explícito (SSH desde ISP-1 bloqueado). Filtro forward aplica anti-spoofing descartando prefijos RFC 1918 (10.0.0.0/8 y 192.168.0.0/16) desde ether1 y ether2. |
 
 > Prueba de seguridad obligatoria: adyacencia OSPF / sesión BGP debe **fallar** con clave incorrecta. Documentar el resultado.
 
 ---
 
-
-
 ## 6. Gestión operativa
 
-
-
 ### 6.1 Change log
-
 
 | Fecha      | Responsable           | Cambio                                                                              | Motivo                                       | Cómo se revierte             |
 | ---------- | --------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------- | ---------------------------- |
@@ -332,9 +263,10 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 | 15/10/2026 | R2 Capre Rodrigo      | `fix(isp): elimino dhcp-client de fábrica y regenero exports de los ISPs`           | Regenerar exports ISP                        | Restaurar snapshot `BASE_F1` |
 | 15/10/2026 | R1 Alvite Damian      | `fix(edge): elimino dhcp-client de fábrica y regenero export del EDGE`              | Regenerar export EDGE                        | Restaurar snapshot `BASE_F1` |
 | 15/10/2026 | R5 Elizalde Benjamin  | `fix(hardening): remuevo dhcp-client del resto de routers y regenero los exports`   | Regenerar exports                            | Restaurar snapshot `BASE_F1` |
-
-
-
+| 22/10/2026 | R1 Alvite Damian      | `feat(edge): configuro eBGP dual-homing, redistribución y firewall`    | Borde redundante, inyección default y filtro | Restaurar snapshot `F2`     |
+| 22/10/2026 | R2 Capre Rodrigo      | `feat(isps): configuro eBGP, default-originate y anuncio de loopbacks` | Conectividad WAN y salida a Internet         | Restaurar snapshot `F2`     |
+| 22/10/2026 | R5 Elizalde Benjamin  | `docs(capturas): agrego evidencias de eBGP, traceroute y firewall`    | Validación L3 y verificación de F3           | N/A                         |
+| 22/10/2026 | R5 Elizalde Benjamin  | `docs(memoria): actualizo change log, conectividad y cierro hito F3`   | Respaldo y cierre formal de Fase 3           | Restaurar snapshot `F3`     |
 
 ### 6.2 Backups
 
@@ -343,8 +275,8 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 - **Prueba de restore:** Se ejecutó en el nodo `DIST-2`. Se forzó un reinicio limpio sin configuración por defecto `/system reset-configuration no-defaults=yes`) y se ejecutó la restauración vía `/import file=DIST2-20261008-F1.rsc`. Se verificó que se restablecieron íntegramente las direcciones IP en interfaces físicas y loopback, el usuario `monitor`, las restricciones SSH y el apagado de servicios inseguros, confirmando la validez de los backups.
 - **Snapshot F2:** generado en GNS3 con el nombre `F2`, fecha 15/10/2026 tras verificar la convergencia completa de OSPF y los grupos VRRP en estado operativo.
 - **Exports Fase 2 (15/10/2026):** versionados en el repositorio en la carpeta `backups/2026-10-15/` `EDGE-20261015-F2.rsc`, `CORE1-20261015-F2.rsc`, `CORE2-20261015-F2.rsc`, `DIST1-20261015-F2.rsc`, `DIST2-20261015-F2.rsc`).
-
-
+- **Snapshot F3:** generado en GNS3 bajo el nombre `F3`, fecha 22/10/2026 tras verificar sesiones eBGP establecidas, salida completa a Internet desde PC-USER y reglas de firewall operativas en EDGE.
+- **Exports Fase 3 (22/10/2026):** versionados en el repositorio en la carpeta `backups/2026-10-22/` `EDGE-20261022-F3.rsc`, `ISP1-20261022-F3.rsc`, `ISP2-20261022-F3.rsc`).
 
 ### 6.3 Monitoreo
 
@@ -352,23 +284,17 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 
 ---
 
-
-
 ## 7. Capturas
 
 > Listar o enlazar la carpeta de capturas (drills, tablas, failover).
 
 ---
 
-
-
 ## 8. Conclusiones y lecciones aprendidas
 
 > Post-mortem global: qué salió bien, qué fue difícil, qué harían distinto.
 
 ---
-
-
 
 ## 9. Referencias
 
@@ -380,13 +306,9 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 
 ---
 
-
-
 ## 10. Checklist de entrega
 
 > Marcar **todo** antes de entregar. Si algo no está, el lab no está completo.
-
-
 
 ### Diseño (F0)
 
@@ -395,28 +317,22 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 - [x] Política de seguridad definida (usuarios, servicios, claves)
 - [x] Política de operación definida (change log + backup)
 
-
-
 ### Redes
 
 - [x] 7 CHR + 2 switches + 2 hosts levantados y cableados
 - [x] VRRP operativo (2 grupos, load-sharing)
 - [x] OSPF área 0 con adyacencias (incluido core–core)
-- [ ] BGP eBGP ×2 establecido (multi-homing)
+- [x] BGP eBGP ×2 establecido (multi-homing)
 - [ ] Los 5 drills ejecutados y documentados (runbook + post-mortem + tiempo)
-
-
 
 ### Seguridad
 
 - [x] Hardening aplicado (password, usuario mínimo, servicios apagados)
 - [x] OSPF MD5 funcionando
-- [ ] BGP TCP-MD5 funcionando
+- [x] BGP TCP-MD5 funcionando
 - [x] VRRP auth funcionando
-- [ ] Firewall edge aplicado
+- [x] Firewall edge aplicado
 - [ ] Prueba con clave incorrecta → debe **fallar** (documentado)
-
-
 
 ### Operación
 
@@ -424,8 +340,6 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 - [x] Backups con restore probado
 - [ ] Monitoreo habilitado y documentado
 - [ ] Runbook por drill + post-mortem global
-
-
 
 ### Entrega
 
