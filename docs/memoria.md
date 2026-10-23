@@ -118,19 +118,19 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 
 ## 3. Configuración
 
-> Un bloque por dispositivo. Se puede referenciar el archivo `.rsc` del repo y pegar el contenido final.
+Las configuraciones completas en formato RouterOS script (`.rsc`) se encuentran almacenadas y versionadas en la carpeta `backups/` (EDGE e ISPs en `/2026-10-22/`, mientras que la última versión del resto en `/2026-10-15/`. A continuación se detallan los bloques fundamentales por nodo:
 
-### 3.1 ISP-1
+### 3.1 ISP-1 (AS 65001)
 
-```routeros
-<!-- config final -->
-```
+- **Interfaces & Loopback:** `ether1` (192.0.2.1/30 hacia EDGE), `lo` (198.51.100.1/32).
+- **BGP (eBGP):** Anuncio de loopback vía address-list `bgp-networks`, `default-originate=always` hacia EDGE.
+- **Hardening:** Servicios vulnerables deshabilitados, usuario `monitor` read-only, SSH restringido y SNMP v2c activo.
 
-### 3.2 ISP-2
+### 3.2 ISP-2 (AS 65002)
 
-```routeros
-<!-- config final -->
-```
+- **Interfaces & Loopback:** `ether1` (192.0.2.5/30 hacia EDGE), `lo` (198.51.100.2/32).
+- **BGP (eBGP):** Anuncio de loopback, `default-originate=always` hacia EDGE.
+- **Hardening:** Idem hardening global, comunidad SNMP `monitor` y `public` deshabilitada.
 
 ### 3.3 EDGE
 
