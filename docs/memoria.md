@@ -132,11 +132,13 @@ Las configuraciones completas en formato RouterOS script (`.rsc`) se encuentran 
 - **BGP (eBGP):** Anuncio de loopback, `default-originate=always` hacia EDGE.
 - **Hardening:** Idem hardening global, comunidad SNMP `monitor` y `public` deshabilitada.
 
-### 3.3 EDGE
-
-```routeros
-<!-- config final -->
-```
+### 3.3 EDGE (AS 65000)
+- **Interfaces & Loopback:** `ether1` (hacia ISP-1), `ether2` (hacia ISP-2), `ether3` (10.0.0.1/30 hacia CORE-1), `ether4` (10.0.0.5/30 hacia CORE-2), `lo` (10.255.0.1/32).
+- **Enrutamiento:** 
+  - eBGP Dual-Homing con sesiones hacia ISP-1 e ISP-2 autenticadas por TCP-MD5.
+  - Redistribución OSPF -> BGP para anunciar las subredes LAN hacia los proveedores.
+  - OSPF v2 Área 0 en interfaces ptp hacia CORE-1 y CORE-2 con autenticación criptográfica MD5.
+- **Firewall:** Cadenas `input` (permite OSPF, BGP, ICMP, VRRP y SSH solo desde gestión; drop resto) y `forward` (bloquea RFC1918 spoofing desde la WAN).
 
 ### 3.4 CORE-1
 
