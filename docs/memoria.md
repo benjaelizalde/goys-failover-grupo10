@@ -133,6 +133,7 @@ Las configuraciones completas en formato RouterOS script (`.rsc`) se encuentran 
 - **Hardening:** Idem hardening global, comunidad SNMP `monitor` y `public` deshabilitada.
 
 ### 3.3 EDGE (AS 65000)
+
 - **Interfaces & Loopback:** `ether1` (hacia ISP-1), `ether2` (hacia ISP-2), `ether3` (10.0.0.1/30 hacia CORE-1), `ether4` (10.0.0.5/30 hacia CORE-2), `lo` (10.255.0.1/32).
 - **Enrutamiento:** 
   - eBGP Dual-Homing con sesiones hacia ISP-1 e ISP-2 autenticadas por TCP-MD5.
@@ -140,19 +141,14 @@ Las configuraciones completas en formato RouterOS script (`.rsc`) se encuentran 
   - OSPF v2 Área 0 en interfaces ptp hacia CORE-1 y CORE-2 con autenticación criptográfica MD5.
 - **Firewall:** Cadenas `input` (permite OSPF, BGP, ICMP, VRRP y SSH solo desde gestión; drop resto) y `forward` (bloquea RFC1918 spoofing desde la WAN).
 
-### 3.4 CORE-1
+### 3.4 CORE-1 y 3.5 CORE-2 (Tránsito)
 
-```routeros
-<!-- config final -->
-```
-
-### 3.5 CORE-2
-
-```routeros
-<!-- config final -->
-```
+- **Interfaces & Loopbacks:** CORE-1 (`lo` 10.255.0.11/32), CORE-2 (`lo` 10.255.0.12/32).
+- **Enlace dedicado core-core:** `10.0.0.8/30` en `ether2` entre CORE-1 y CORE-2 (Área 0 ptp).
+- **OSPF:** Tránsito puro en Área 0 con plantillas punto a punto sobre enlaces verticales hacia EDGE y DIST-1/2, con autenticación MD5 activa.
 
 ### 3.6 DIST-1 y 3.7 DIST-2 (Capa de Distribución)
+
 - **Interfaces & Loopbacks:** DIST-1 (`lo` 10.255.0.21/32), DIST-2 (`lo` 10.255.0.22/32).
 - **Uplinks:** Enlaces OSPF ptp hacia CORE-1 y CORE-2 en Área 0 con MD5.
 - **Downlinks LAN & FHRP (VRRP):**
