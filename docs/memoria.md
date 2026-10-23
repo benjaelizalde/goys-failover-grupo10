@@ -152,17 +152,13 @@ Las configuraciones completas en formato RouterOS script (`.rsc`) se encuentran 
 <!-- config final -->
 ```
 
-### 3.6 DIST-1
-
-```routeros
-<!-- config final -->
-```
-
-### 3.7 DIST-2
-
-```routeros
-<!-- config final -->
-```
+### 3.6 DIST-1 y 3.7 DIST-2 (Capa de Distribución)
+- **Interfaces & Loopbacks:** DIST-1 (`lo` 10.255.0.21/32), DIST-2 (`lo` 10.255.0.22/32).
+- **Uplinks:** Enlaces OSPF ptp hacia CORE-1 y CORE-2 en Área 0 con MD5.
+- **Downlinks LAN & FHRP (VRRP):**
+  - Segmento USERS: `192.168.10.0/24` en `ether3`. Virtual IP `192.168.10.1` (VRID 10). DIST-1 Master (`prio 200`), DIST-2 Backup (`prio 100`).
+  - Segmento SERVERS: `192.168.20.0/24` en `ether4`. Virtual IP `192.168.20.1` (VRID 20). DIST-2 Master (`prio 200`), DIST-1 Backup (`prio 100`).
+  - Autenticación simple activada en ambos grupos.
 
 ### 3.8 Hosts (PC-USER / SRV)
 
