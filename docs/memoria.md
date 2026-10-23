@@ -1,7 +1,5 @@
 # Memoria del Laboratorio — Failover Routing
 
-> Plantilla de documentación. Completar **todos** los campos. Los bloques entre `<!-- -->` son instrucciones (se borran al entregar).
-
 **Grupo:** Grupo 10
 **Materia:** Gestión Operativa y Seguridad en Redes (GOYS)
 **Fecha de entrega:** 23/10/2026
@@ -158,9 +156,8 @@ Las configuraciones completas en formato RouterOS script (`.rsc`) se encuentran 
 
 ### 3.8 Hosts (PC-USER / SRV)
 
-```bash
-<!-- config final de los hosts -->
-```
+- **PC-USER:** IP `192.168.10.100/24`, Gateway `192.168.10.1`.
+- **SRV:** IP `192.168.20.100/24`, Gateway `192.168.20.1`.
 
 ---
 
@@ -276,6 +273,11 @@ Las configuraciones completas en formato RouterOS script (`.rsc`) se encuentran 
 | 23/10/2026 | R1 Alvite Damian      | `docs(test-bgp): verificación negativa de autenticación BGP TCP-MD5`                | Prueba de rechazo de sesión TCP 179 por clave disconforme | Restaurar clave original           |
 | 23/10/2026 | R4 Moscuzza Vicente   | `docs(test-vrrp): verificación negativa de autenticación VRRP`                      | Prueba de descarte de paquetes Hello y split-brain        | Restaurar clave original           |
 | 23/10/2026 | R5 Elizalde Benjamin  | `docs: restauración de claves válidas y cierre de F4`                               | Reanudación de régimen normal y auditoría de seguridad    | N/A                                |
+| 23/10/2026 | R2 Capre Rodrigo      | `docs(isps): completo 3.1 y 3.2 de memoria`                                             | Completar configuración ISP en memoria                | N/A           |
+| 23/10/2026 | R1 Alvite Damian      | `docs(edge): completo la config de EDGE en la memoria`                | Completar configuración EDGE en memoria | N/A          |
+| 23/10/2026 | R4 Moscuzza Vicente   | `docs(dist): agrego configuracion 3.6 y 3.7`                      | Completar configuración DIST en memoria        | N/A          |
+| 23/10/2026 | R3 Di Grappa Emiliano | `docs(core): agrego configuracion de los COREs`                  | Completar configuración CORE en memoria     | N/A          |
+| 23/10/2026 | R5 Elizalde Benjamin  | `docs: completo backlog y memoria, cierre de F5`                               | Completar backlog y memoria, cierre F5    | N/A                                |
 
 ### 6.2 Backups
 
@@ -323,23 +325,34 @@ Todas las evidencias gráficas del laboratorio se encuentran organizadas y versi
 
 ## 8. Conclusiones y lecciones aprendidas
 
-> Post-mortem global: qué salió bien, qué fue difícil, qué harían distinto.
+### 8.1 Post-mortem Global
+
+- **Qué funcionó según lo planeado:**
+  1. La arquitectura jerárquica modular permitió aislar las funciones de enrutamiento: el Core operó como tránsito de alta velocidad sin sobrecarga de políticas, mientras que la Distribución concentró la resiliencia de primer salto.
+  2. Los 5 drills validaron la resiliencia ante cortes: VRRP y OSPF conmutaron en tiempos sub-segundo (~1s), y el BGP dual-homing absorbió la caída de enlace WAN sin interrumpir el servicio hacia Internet.
+  3. La inclusión del enlace directo `core-core` (corrección F0) evitó el aislamiento de Core ante fallas de uplinks en el borde.
+- **Qué dificultades se presentaron:**
+  1. Mismatch de temporizadores e interfaces en la emulación de QEMU/GNS3: ante caídas lógicas de interfaces, BGP demoraba la desconexión TCP si no se bajaba administrativamente el puerto o vencía el hold-timer.
+  2. Restricciones del estándar VRRP v2 en RouterOS v7: la limitación de contraseñas de autenticación simple a un máximo de 8 caracteres exigió sanear las claves del laboratorio para evitar alertas de `misconfigured authentication type`.
+- **Qué haríamos distinto en una implementación real:**
+  - Implementar BFD (Bidirectional Forwarding Detection) tanto en OSPF como en las sesiones BGP para reducir el tiempo de detección de fallas lógicas a escala de milisegundos sin depender del sondeo ICMP de `check-gateway`.
+  - Configurar VRRP v3 para soportar IPv6 de forma nativa e incorporar tablas de enrutamiento VRF en los routers de distribución para segmentar usuarios de servidores a nivel de plano de datos.
 
 ---
 
 ## 9. Referencias
 
-> Lecturas y videos efectivamente consultados.
-
-- 
-
-- 
+- Kurose, J. F., & Ross, K. W. (2017). *Computer Networking: A Top-Down Approach* (7ma ed.). Pearson. (Capítulo 4: El Plano de Datos; Capítulo 5: El Plano de Control).
+- Doyle, J., & Carroll, J. (2005). *Routing TCP/IP, Volume I & II*. Cisco Press.
+- RFC 2328: *OSPF Version 2* (Moy, J., 1998).
+- RFC 4271: *A Border Gateway Protocol 4 (BGP-4)* (Rekhter, Y., Li, T., & Hares, S., 2006).
+- RFC 2385: *Protection of BGP Sessions via the TCP MD5 Signature Option*.
+- RFC 5798: *Virtual Router Redundancy Protocol (VRRP) Version 3 for IPv4 and IPv6*.
+- MikroTik RouterOS v7 Documentation: *Routing (OSPF, BGP, VRRP), IP Firewall, SNMP and Device Hardening Guidelines*.
 
 ---
 
 ## 10. Checklist de entrega
-
-> Marcar **todo** antes de entregar. Si algo no está, el lab no está completo.
 
 ### Diseño (F0)
 
@@ -374,8 +387,8 @@ Todas las evidencias gráficas del laboratorio se encuentran organizadas y versi
 
 ### Entrega
 
-- [ ] Memoria completa (todas las secciones de esta plantilla)
-- [ ] Repo git con la estructura correcta y commits por rol
-- [ ] `backlog.md` con todas las tareas en "done"
-- [ ] Capturas en la carpeta `capturas/`
-- [ ] Cada integrante puede defender su parte **y** una parte ajena
+- [x] Memoria completa (todas las secciones de esta plantilla)
+- [x] Repo git con la estructura correcta y commits por rol
+- [x] `backlog.md` con todas las tareas en "done"
+- [x] Capturas en la carpeta `capturas/`
+- [x] Cada integrante puede defender su parte **y** una parte ajena

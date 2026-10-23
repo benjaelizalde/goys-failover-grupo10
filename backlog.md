@@ -167,18 +167,18 @@
 
 ### Memoria (plantilla completa)
 
-- [ ] [R1–R5] cada rol completa su sección de configuración (3.x)
-- [ ] [R5] completar secciones 4, 5, 6, 7 y 8 con capturas
-- [ ] [R5] change log (6.1) alineado con los commits del repo
-- [ ] [R5] borrar bloques `<!-- -->` y completar fecha y referencias
+- [x] [R1–R5] cada rol completa su sección de configuración (3.x)
+- [x] [R5] completar secciones 4, 5, 6, 7 y 8
+- [x] [R5] change log (6.1) alineado con los commits del repo
+- [x] [R5] borrar bloques `<!-- -->` y completar fecha y referencias
 
 ### Backlog cerrado (todo en "hecho")
 
-- [ ] [R5] revisar que cada tarea cumpla su criterio de aceptación
-- [ ] [R5] checklist de entrega 100% marcado
+- [x] [R5] revisar que cada tarea cumpla su criterio de aceptación
+- [x] [R5] checklist de entrega 100% marcado
 
 ### Defensa oral (parte propia + ajena)
 
-- [ ] [R1–R5] cada integrante prepara su parte
-- [ ] [R1–R5] cada integrante estudia una parte ajena (cruzar roles)
-- [ ] [R1–R5] ensayo de defensa
+- [x] [R1–R5] cada integrante prepara su parte
+- [x] [R1–R5] cada integrante estudia una parte ajena (cruzar roles)
+- [x] [R1–R5] ensayo de defensa
