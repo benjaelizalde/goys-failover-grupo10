@@ -143,23 +143,23 @@
 
 - [x] [R5] backup previo a cada drill
 - [x] [R3] drill 1 — VRRP: runbook, tiempo, post-mortem
-- [ ] [R4] drill 2 — OSPF: runbook, tiempo, post-mortem
-- [ ] [R2] drill 3 — BGP: runbook, tiempo, post-mortem
-- [ ] [R1] drill 4 — check-gateway: runbook, tiempo, post-mortem
-- [ ] [R5] drill 5 — load-sharing VRRP: runbook, post-mortem
+- [x] [R4] drill 2 — OSPF: runbook, tiempo, post-mortem
+- [x] [R2] drill 3 — BGP: runbook, tiempo, post-mortem
+- [x] [R1] drill 4 — check-gateway: runbook, tiempo, post-mortem
+- [x] [R5] drill 5 — load-sharing VRRP: runbook, post-mortem
 - [x] [R1–R4] rotación de roles planificada
 
 ### Monitoreo (SNMP/chequeos)
 
-- [ ] [R5] habilitar SNMP con usuario `monitor` en los 7 routers
-- [ ] [R5] definir y documentar qué se monitorea (enlaces, OSPF, BGP, VRRP)
+- [x] [R5] habilitar SNMP con usuario `monitor` en los 7 routers
+- [x] [R5] definir y documentar qué se monitorea (enlaces, OSPF, BGP, VRRP)
 
 ### Verificación de seguridad (clave incorrecta falla)
 
-- [ ] [R3] clave OSPF incorrecta → adyacencia cae (captura)
-- [ ] [R1] clave BGP incorrecta → sesión no establece (captura)
-- [ ] [R4] clave VRRP incorrecta → documentar resultado
-- [ ] [R5] restaurar claves correctas y registrar en change log
+- [x] [R3] clave OSPF incorrecta → adyacencia cae (captura)
+- [x] [R1] clave BGP incorrecta → sesión no establece (captura)
+- [x] [R4] clave VRRP incorrecta → documentar resultado
+- [x] [R5] restaurar claves correctas y registrar en change log
 
 ---
 

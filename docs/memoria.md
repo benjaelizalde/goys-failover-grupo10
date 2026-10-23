@@ -198,15 +198,15 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 #### Drill 2 — OSPF: se corta el camino interno
 
 - **Detección:** Se deshabilita la interfaz `ether3` en EDGE (enlace directo a CORE-1). PC-USER experimenta un aumento transitorio de latencia a 12.57 ms.
-- **Respuesta:** La adyacencia OSPF cae inmediatamente. OSPF ejecuta SPF y desvía la salida de CORE-1 hacia CORE-2 `10.0.0.10`) mediante el enlace `core-core`. EDGE conmuta las rutas internas hacia CORE-2 `10.0.0.6`).
-- **Recuperación:** Al rehabilitar `ether3`, la adyacencia con CORE-1 vuelve a estado `Full` en 1 segundo y EDGE restablece el esquema ECMP `DAo+`) hacia ambas LANs.
+- **Respuesta:** La adyacencia OSPF cae inmediatamente. OSPF ejecuta SPF y desvía la salida de CORE-1 hacia CORE-2 `10.0.0.10` mediante el enlace `core-core`. EDGE conmuta las rutas internas hacia CORE-2 `10.0.0.6`.
+- **Recuperación:** Al rehabilitar `ether3`, la adyacencia con CORE-1 vuelve a estado `Full` en 1 segundo y EDGE restablece el esquema ECMP `DAo+` hacia ambas LANs.
 - **Tiempo medido:** ~1 segundo (1 paquete perdido, `seq=8`, en ping continuo de 1s).
 - **Post-mortem:** Valida empíricamente la corrección del Defecto 3 del diseño F0: sin el enlace `core-core`, la caída del uplink de CORE-1 hubiera dejado aislado el tráfico de la mitad de la red.
 
 #### Drill 3 — BGP: se cae el proveedor
 
 - **Detección:** Se deshabilita `ether1` en EDGE simulando corte de fibra con ISP-1.
-- **Respuesta:** La ruta por defecto de ISP-1 pasa a inactiva `DIb`) y BGP activa de forma automática la ruta por defecto de ISP-2 `192.0.2.5` vía `ether2`, bandera `DAb`). PC-USER conmuta su salida a Internet por ISP-2 sin cortes hacia destinos alcanzables.
+- **Respuesta:** La ruta por defecto de ISP-1 pasa a inactiva (`DIb`) y BGP activa de forma automática la ruta por defecto de ISP-2 `192.0.2.5` vía `ether2`, bandera (`DAb`). PC-USER conmuta su salida a Internet por ISP-2 sin cortes hacia destinos alcanzables.
 - **Recuperación:** Al rehabilitar `ether1`, la sesión `to-ISP1` vuelve a ser la principal restableciendo la redundancia dual-homing.
 - **Tiempo medido:** Conmutación inmediata en la FIB de EDGE por detección de portadora caída. Pings de verificación hacia ISP-2 con 0% packet loss y 4.0 ms de promedio.
 - **Post-mortem:** Demuestra la efectividad del multi-homing eBGP en el borde: la pérdida de un proveedor no aísla a la organización, manteniendo la navegación a través del segundo carrier.
@@ -214,15 +214,15 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 #### Drill 4 — check-gateway: failover estático de enlace
 
 - **Detección:** Se interrumpe la respuesta de `192.0.2.1` en ISP-1. EDGE detecta la pérdida de pings de sondeo cada 10 segundos.
-- **Respuesta:** La ruta estática primaria con distancia 1 pasa a inactiva `Is`). La ruta de respaldo hacia ISP-2 `distance=2`) asume el tráfico de forma automática con bandera `As`.
-- **Recuperación:** Al restablecer la IP de ISP-1, la ruta primaria con distancia 1 vuelve a estado activo `As`) y la secundaria queda en reserva `s`).
+- **Respuesta:** La ruta estática primaria con distancia 1 pasa a inactiva (`Is`). La ruta de respaldo hacia ISP-2 (`distance=2`) asume el tráfico de forma automática con bandera `As`.
+- **Recuperación:** Al restablecer la IP de ISP-1, la ruta primaria con distancia 1 vuelve a estado activo (`As`) y la secundaria queda en reserva (`s`).
 - **Tiempo medido:** ~20 segundos para la invalidación de la ruta primaria. El ping continuo de PC-USER hacia ISP-2 mantuvo 0% packet loss con latencia media de 4.64 ms.
 - **Post-mortem:** Demuestra la utilidad de las rutas flotantes para escenarios donde se pierde conectividad lógica sin caída física de la interfaz (falla silenciosa del proveedor).
 
 #### Drill 5 — Load-sharing VRRP: ambos DIST activos
 
 - **Detección:** Monitoreo concurrente de flujos desde USERS y SERVERS hacia Internet.
-- **Respuesta:** VRID 10 opera con Master en DIST-1 `192.168.10.2`) y VRID 20 opera con Master en DIST-2 `192.168.20.3`). Los traceroutes de PC-USER y SRV confirman primeros saltos físicos independientes hacia cada router de distribución.
+- **Respuesta:** VRID 10 opera con Master en DIST-1 (`192.168.10.2`) y VRID 20 opera con Master en DIST-2 (`192.168.20.3`). Los traceroutes de PC-USER y SRV confirman primeros saltos físicos independientes hacia cada router de distribución.
 - **Recuperación:** Operación en régimen permanente sin necesidad de conmutación. Contadores de interfaz confirman procesamiento activo en simultáneo (ether3 en DIST-1 y ether4 en DIST-2 cursando más de 1.000 paquetes cada uno).
 - **Post-mortem:** Valida la eficiencia del diseño Active-Active eliminando equipamiento ocioso en la capa de Distribución.
 
@@ -238,7 +238,11 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 | VRRP auth                      | Interfaces LAN en DIST-1 y DIST-2                              | Grupos VRID 10 y 20 operativos con flags `RM` y `B` usando autenticación simple (password).                                                                                |
 | Firewall/ACL (edge)            | Router EDGE (cadenas input y forward)                          | Filtro input descarta tráfico no explícito (SSH desde ISP-1 bloqueado). Filtro forward aplica anti-spoofing descartando prefijos RFC 1918 (10.0.0.0/8 y 192.168.0.0/16) desde ether1 y ether2. |
 
-> Prueba de seguridad obligatoria: adyacencia OSPF / sesión BGP debe **fallar** con clave incorrecta. Documentar el resultado.
+### 5.1 Pruebas de seguridad negativa (autenticación obligatoria)
+
+- **OSPF MD5:** Al alterar intencionalmente el `auth-key` en CORE-2, la adyacencia con CORE-1 cayó de inmediato y se detuvo el intercambio de LSAs, validando la protección contra inyección espuria de rutas (captura en `capturas/F4/seguridad/ospf.png`).
+- **BGP TCP-MD5:** Al configurar una clave errónea en EDGE hacia ISP-1, el handshake TCP en el puerto 179 fue descartado y la sesión no llegó a estado `Established` (`E`), protegiendo el plano de enrutamiento exterior (captura en `capturas/F4/seguridad/bgp.png`).
+- **VRRP Simple Auth:** Al ingresar una contraseña disconforme en DIST-2, RouterOS registró `misconfigured authentication type` y descartó los anuncios multicast; como resultado, ambos routers asumieron el rol de Master (`RM`) en VRID 10 provocando split-brain y conflicto de IP virtual, demostrando la validación estricta de paquetes de primer salto (captura en `capturas/F4/seguridad/vrrp-1.png y vrrp-2.png`).
 
 ---
 
@@ -246,34 +250,38 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 
 ### 6.1 Change log
 
-| Fecha      | Responsable           | Cambio                                                                              | Motivo                                        | Cómo se revierte                   |
-| ---------- | --------------------- | ----------------------------------------------------------------------------------- | --------------------------------------------- | ---------------------------------- |
-| 08/10/2026 | R4 Moscuzza Vicente   | `ops(backup): backup post-F1 de DIST-1 y DIST-2`                                    | Despliegue F1 capa Distribución               | Restaurar snapshot `BASE_F1`       |
-| 08/10/2026 | R3 Di Grappa Emiliano | `ops(backup): agregar CORE1 y CORE2`                                                | Despliegue F1 capa Core                       | Restaurar snapshot `BASE_F1`       |
-| 08/10/2026 | R2 Capre Rodrigo      | `ops(backups): agrego ISPs`                                                         | Despliegue F1 proveedores                     | Restaurar snapshot `BASE_F1`       |
-| 09/10/2026 | R1 Alvite Damian      | `ops(backups): agrego la configuracion del router EDGE`                             | Despliegue F1 nodo EDGE                       | Restaurar snapshot `BASE_F1`       |
-| 09/10/2026 | R5 Elizalde Benjamin  | `docs(memoria): actualiza memoria a F1 con topologia, change log y restore probado` | Memoria de Fase 1                             | N/A (punto de recuperación)        |
-| 09/10/2026 | R5 Elizalde Benjamin  | `ops(backlog): snapshot BASE y actualizo backlog F1 a done`                         | Cierre de Fase 1                              | N/A (punto de recuperación)        |
-| 15/10/2026 | R4 Moscuzza Vicente   | `feat(dist): configuro VRRP v2 con auth y OSPF MD5 en DIST-1 y DIST-2`              | Gateways virtuales activos y ruteo interno    | Restaurar snapshot `BASE_F1`       |
-| 15/10/2026 | R3 Di Grappa Emiliano | `feat(core): configuro OSPF MD5 en area 0 y enlace core-core`                       | Habilitar tránsito IGP seguro en Core         | Restaurar snapshot `BASE_F1`       |
-| 15/10/2026 | R5 Elizalde Benjamin  | `fix(core): acomodo espacio de nombres en los archivos de CORE-2`                   | Arreglar nombres de archivos                  | N/A                                |
-| 15/10/2026 | R1 Alvite Damian      | `feat(edge): configuro OSPF MD5 hacia la capa Core`                                 | Anuncio de rutas internas al router de borde  | Restaurar snapshot `BASE_F1`       |
-| 15/10/2026 | R5 Elizalde Benjamin  | `docs(capturas): agrego evidencias de adyacencias OSPF, VRRP y pings L3`            | Pruebas de aceptación F2                      | N/A                                |
-| 15/10/2026 | R5 Elizalde Benjamin  | `docs: actualizo change log, backlog y cierro hito F2 a done`                       | Respaldo y cierre formal de Fase 2            | Restaurar snapshot `F2`            |
-| 15/10/2026 | R2 Capre Rodrigo      | `fix(isp): elimino dhcp-client de fábrica y regenero exports de los ISPs`           | Regenerar exports ISP                         | Restaurar snapshot `BASE_F1`       |
-| 15/10/2026 | R1 Alvite Damian      | `fix(edge): elimino dhcp-client de fábrica y regenero export del EDGE`              | Regenerar export EDGE                         | Restaurar snapshot `BASE_F1`       |
-| 15/10/2026 | R5 Elizalde Benjamin  | `fix(hardening): remuevo dhcp-client del resto de routers y regenero los exports`   | Regenerar exports                             | Restaurar snapshot `BASE_F1`       |
-| 22/10/2026 | R1 Alvite Damian      | `feat(edge): configuro eBGP dual-homing, redistribución y firewall`                 | Borde redundante, inyección default y filtro  | Restaurar snapshot `F2`            |
-| 22/10/2026 | R2 Capre Rodrigo      | `feat(isps): configuro eBGP, default-originate y anuncio de loopbacks`              | Conectividad WAN y salida a Internet          | Restaurar snapshot `F2`            |
-| 22/10/2026 | R5 Elizalde Benjamin  | `docs(capturas): agrego evidencias de eBGP, traceroute y firewall`                  | Validación L3 y verificación de F3            | N/A                                |
-| 22/10/2026 | R5 Elizalde Benjamin  | `docs(memoria): actualizo change log, conectividad y cierro hito F3`                | Respaldo y cierre formal de Fase 3            | Restaurar snapshot `F3`            |
-| 22/10/2026 | R3 Di Grappa Emiliano | `docs(drill1): runbook de failover VRRP por R3`                                     | Drill 1                                       | Restaurar snapshot `F4-PRE-DRILLS` |
-| 22/10/2026 | R5 Elizalde Benjamin  | `docs: actualizo asignacion de drills F4 con rotacion de roles`                     | Actualizar memoria y backlog                  | N/A                                |
-| 22/10/2026 | R4 Moscuzza Vicente   | `docs(drill2): completo failover OSPF`                                              | Validación de redundancia IGP y core-core     | Restaurar snapshot `F4-PRE-DRILLS` |
-| 22/10/2026 | R2 Capre Rodrigo      | `docs(drill3): se realiza failover BGP`                                             | Validación de redundancia WAN multi-homing    | Restaurar snapshot `F4-PRE-DRILLS` |
-| 22/10/2026 | R1 Alvite Damian      | `docs(drill4): completa drill 4 check-gateway`                                      | Validación de failover estático por distancia | Restaurar snapshot `F4-PRE-DRILLS` |
-| 23/10/2026 | R5 Elizalde Benjamin  | `docs(drill5): load-sharing VRRP`                                                   | Validación de esquema Active-Active           | Restaurar snapshot `F4-PRE-DRILLS` |
-| 23/10/2026 | R5 Elizalde Benjamin  | `docs(snmp): habilito SNMP con usuario monitor y documento que se monitorea`        | Habilitar SNMP en usuarios monitos            | Restaurar snapshot `F4-PRE-DRILLS` |
+| Fecha      | Responsable           | Cambio                                                                              | Motivo                                                    | Cómo se revierte                   |
+| ---------- | --------------------- | ----------------------------------------------------------------------------------- | --------------------------------------------------------- | ---------------------------------- |
+| 08/10/2026 | R4 Moscuzza Vicente   | `ops(backup): backup post-F1 de DIST-1 y DIST-2`                                    | Despliegue F1 capa Distribución                           | Restaurar snapshot `BASE_F1`       |
+| 08/10/2026 | R3 Di Grappa Emiliano | `ops(backup): agregar CORE1 y CORE2`                                                | Despliegue F1 capa Core                                   | Restaurar snapshot `BASE_F1`       |
+| 08/10/2026 | R2 Capre Rodrigo      | `ops(backups): agrego ISPs`                                                         | Despliegue F1 proveedores                                 | Restaurar snapshot `BASE_F1`       |
+| 09/10/2026 | R1 Alvite Damian      | `ops(backups): agrego la configuracion del router EDGE`                             | Despliegue F1 nodo EDGE                                   | Restaurar snapshot `BASE_F1`       |
+| 09/10/2026 | R5 Elizalde Benjamin  | `docs(memoria): actualiza memoria a F1 con topologia, change log y restore probado` | Memoria de Fase 1                                         | N/A (punto de recuperación)        |
+| 09/10/2026 | R5 Elizalde Benjamin  | `ops(backlog): snapshot BASE y actualizo backlog F1 a done`                         | Cierre de Fase 1                                          | N/A (punto de recuperación)        |
+| 15/10/2026 | R4 Moscuzza Vicente   | `feat(dist): configuro VRRP v2 con auth y OSPF MD5 en DIST-1 y DIST-2`              | Gateways virtuales activos y ruteo interno                | Restaurar snapshot `BASE_F1`       |
+| 15/10/2026 | R3 Di Grappa Emiliano | `feat(core): configuro OSPF MD5 en area 0 y enlace core-core`                       | Habilitar tránsito IGP seguro en Core                     | Restaurar snapshot `BASE_F1`       |
+| 15/10/2026 | R5 Elizalde Benjamin  | `fix(core): acomodo espacio de nombres en los archivos de CORE-2`                   | Arreglar nombres de archivos                              | N/A                                |
+| 15/10/2026 | R1 Alvite Damian      | `feat(edge): configuro OSPF MD5 hacia la capa Core`                                 | Anuncio de rutas internas al router de borde              | Restaurar snapshot `BASE_F1`       |
+| 15/10/2026 | R5 Elizalde Benjamin  | `docs(capturas): agrego evidencias de adyacencias OSPF, VRRP y pings L3`            | Pruebas de aceptación F2                                  | N/A                                |
+| 15/10/2026 | R5 Elizalde Benjamin  | `docs: actualizo change log, backlog y cierro hito F2 a done`                       | Respaldo y cierre formal de Fase 2                        | Restaurar snapshot `F2`            |
+| 15/10/2026 | R2 Capre Rodrigo      | `fix(isp): elimino dhcp-client de fábrica y regenero exports de los ISPs`           | Regenerar exports ISP                                     | Restaurar snapshot `BASE_F1`       |
+| 15/10/2026 | R1 Alvite Damian      | `fix(edge): elimino dhcp-client de fábrica y regenero export del EDGE`              | Regenerar export EDGE                                     | Restaurar snapshot `BASE_F1`       |
+| 15/10/2026 | R5 Elizalde Benjamin  | `fix(hardening): remuevo dhcp-client del resto de routers y regenero los exports`   | Regenerar exports                                         | Restaurar snapshot `BASE_F1`       |
+| 22/10/2026 | R1 Alvite Damian      | `feat(edge): configuro eBGP dual-homing, redistribución y firewall`                 | Borde redundante, inyección default y filtro              | Restaurar snapshot `F2`            |
+| 22/10/2026 | R2 Capre Rodrigo      | `feat(isps): configuro eBGP, default-originate y anuncio de loopbacks`              | Conectividad WAN y salida a Internet                      | Restaurar snapshot `F2`            |
+| 22/10/2026 | R5 Elizalde Benjamin  | `docs(capturas): agrego evidencias de eBGP, traceroute y firewall`                  | Validación L3 y verificación de F3                        | N/A                                |
+| 22/10/2026 | R5 Elizalde Benjamin  | `docs(memoria): actualizo change log, conectividad y cierro hito F3`                | Respaldo y cierre formal de Fase 3                        | Restaurar snapshot `F3`            |
+| 22/10/2026 | R3 Di Grappa Emiliano | `docs(drill1): runbook de failover VRRP por R3`                                     | Drill 1                                                   | Restaurar snapshot `F4-PRE-DRILLS` |
+| 22/10/2026 | R5 Elizalde Benjamin  | `docs: actualizo asignacion de drills F4 con rotacion de roles`                     | Actualizar memoria y backlog                              | N/A                                |
+| 22/10/2026 | R4 Moscuzza Vicente   | `docs(drill2): completo failover OSPF`                                              | Validación de redundancia IGP y core-core                 | Restaurar snapshot `F4-PRE-DRILLS` |
+| 22/10/2026 | R2 Capre Rodrigo      | `docs(drill3): se realiza failover BGP`                                             | Validación de redundancia WAN multi-homing                | Restaurar snapshot `F4-PRE-DRILLS` |
+| 22/10/2026 | R1 Alvite Damian      | `docs(drill4): completa drill 4 check-gateway`                                      | Validación de failover estático por distancia             | Restaurar snapshot `F4-PRE-DRILLS` |
+| 23/10/2026 | R5 Elizalde Benjamin  | `docs(drill5): load-sharing VRRP`                                                   | Validación de esquema Active-Active                       | Restaurar snapshot `F4-PRE-DRILLS` |
+| 23/10/2026 | R5 Elizalde Benjamin  | `docs(snmp): habilito SNMP con usuario monitor y documento que se monitorea`        | Habilitar SNMP en usuarios monitos                        | Restaurar snapshot `F4-PRE-DRILLS` |
+| 23/10/2026 | R3 Di Grappa Emiliano | `docs(test-ospf): verificación negativa de autenticación OSPF MD5`                  | Prueba de rechazo de adyacencia por clave disconforme     | Restaurar clave original           |
+| 23/10/2026 | R1 Alvite Damian      | `docs(test-bgp): verificación negativa de autenticación BGP TCP-MD5`                | Prueba de rechazo de sesión TCP 179 por clave disconforme | Restaurar clave original           |
+| 23/10/2026 | R4 Moscuzza Vicente   | `docs(test-vrrp): verificación negativa de autenticación VRRP`                      | Prueba de descarte de paquetes Hello y split-brain        | Restaurar clave original           |
+| 23/10/2026 | R5 Elizalde Benjamin  | `docs: restauración de claves válidas y cierre de F4`                               | Reanudación de régimen normal y auditoría de seguridad    | N/A                                |
 
 ### 6.2 Backups
 
@@ -315,7 +323,7 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 
 ## 7. Capturas
 
-> Listar o enlazar la carpeta de capturas (drills, tablas, failover).
+Todas las evidencias gráficas del laboratorio se encuentran organizadas y versionadas dentro del directorio `capturas/` en la raíz del repositorio, clasificadas cronológicamente y por hito operativo:
 
 ---
 
@@ -352,7 +360,7 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 - [x] VRRP operativo (2 grupos, load-sharing)
 - [x] OSPF área 0 con adyacencias (incluido core–core)
 - [x] BGP eBGP ×2 establecido (multi-homing)
-- [ ] Los 5 drills ejecutados y documentados (runbook + post-mortem + tiempo)
+- [x] Los 5 drills ejecutados y documentados (runbook + post-mortem + tiempo)
 
 ### Seguridad
 
@@ -361,14 +369,14 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 - [x] BGP TCP-MD5 funcionando
 - [x] VRRP auth funcionando
 - [x] Firewall edge aplicado
-- [ ] Prueba con clave incorrecta → debe **fallar** (documentado)
+- [x] Prueba con clave incorrecta → debe **fallar** (documentado)
 
 ### Operación
 
 - [x] Change log completo (refleja los commits del repo)
 - [x] Backups con restore probado
-- [ ] Monitoreo habilitado y documentado
-- [ ] Runbook por drill + post-mortem global
+- [x] Monitoreo habilitado y documentado
+- [x] Runbook por drill + post-mortem global
 
 ### Entrega
 
