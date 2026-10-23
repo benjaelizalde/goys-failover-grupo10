@@ -197,34 +197,34 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 
 #### Drill 2 — OSPF: se corta el camino interno
 
-- **Detección:**
-- **Respuesta:**
-- **Recuperación:**
-- **Tiempo medido:**
-- **Post-mortem:**
+- **Detección:** Se deshabilita la interfaz `ether3` en EDGE (enlace directo a CORE-1). PC-USER experimenta un aumento transitorio de latencia a 12.57 ms.
+- **Respuesta:** La adyacencia OSPF cae inmediatamente. OSPF ejecuta SPF y desvía la salida de CORE-1 hacia CORE-2 `10.0.0.10`) mediante el enlace `core-core`. EDGE conmuta las rutas internas hacia CORE-2 `10.0.0.6`).
+- **Recuperación:** Al rehabilitar `ether3`, la adyacencia con CORE-1 vuelve a estado `Full` en 1 segundo y EDGE restablece el esquema ECMP `DAo+`) hacia ambas LANs.
+- **Tiempo medido:** ~1 segundo (1 paquete perdido, `seq=8`, en ping continuo de 1s).
+- **Post-mortem:** Valida empíricamente la corrección del Defecto 3 del diseño F0: sin el enlace `core-core`, la caída del uplink de CORE-1 hubiera dejado aislado el tráfico de la mitad de la red.
 
 #### Drill 3 — BGP: se cae el proveedor
 
-- **Detección:**
-- **Respuesta:**
-- **Recuperación:**
-- **Tiempo medido:**
-- **Post-mortem:**
+- **Detección:** Se deshabilita `ether1` en EDGE simulando corte de fibra con ISP-1.
+- **Respuesta:** La ruta por defecto de ISP-1 pasa a inactiva `DIb`) y BGP activa de forma automática la ruta por defecto de ISP-2 `192.0.2.5` vía `ether2`, bandera `DAb`). PC-USER conmuta su salida a Internet por ISP-2 sin cortes hacia destinos alcanzables.
+- **Recuperación:** Al rehabilitar `ether1`, la sesión `to-ISP1` vuelve a ser la principal restableciendo la redundancia dual-homing.
+- **Tiempo medido:** Conmutación inmediata en la FIB de EDGE por detección de portadora caída. Pings de verificación hacia ISP-2 con 0% packet loss y 4.0 ms de promedio.
+- **Post-mortem:** Demuestra la efectividad del multi-homing eBGP en el borde: la pérdida de un proveedor no aísla a la organización, manteniendo la navegación a través del segundo carrier.
 
 #### Drill 4 — check-gateway: failover estático de enlace
 
-- **Detección:**
-- **Respuesta:**
-- **Recuperación:**
-- **Tiempo medido:**
-- **Post-mortem:**
+- **Detección:** Se interrumpe la respuesta de `192.0.2.1` en ISP-1. EDGE detecta la pérdida de pings de sondeo cada 10 segundos.
+- **Respuesta:** La ruta estática primaria con distancia 1 pasa a inactiva `Is`). La ruta de respaldo hacia ISP-2 `distance=2`) asume el tráfico de forma automática con bandera `As`.
+- **Recuperación:** Al restablecer la IP de ISP-1, la ruta primaria con distancia 1 vuelve a estado activo `As`) y la secundaria queda en reserva `s`).
+- **Tiempo medido:** ~20 segundos para la invalidación de la ruta primaria. El ping continuo de PC-USER hacia ISP-2 mantuvo 0% packet loss con latencia media de 4.64 ms.
+- **Post-mortem:** Demuestra la utilidad de las rutas flotantes para escenarios donde se pierde conectividad lógica sin caída física de la interfaz (falla silenciosa del proveedor).
 
 #### Drill 5 — Load-sharing VRRP: ambos DIST activos
 
-- **Detección:**
-- **Respuesta:**
-- **Recuperación:**
-- **Post-mortem:**
+- **Detección:** Monitoreo concurrente de flujos desde USERS y SERVERS hacia Internet.
+- **Respuesta:** VRID 10 opera con Master en DIST-1 `192.168.10.2`) y VRID 20 opera con Master en DIST-2 `192.168.20.3`). Los traceroutes de PC-USER y SRV confirman primeros saltos físicos independientes hacia cada router de distribución.
+- **Recuperación:** Operación en régimen permanente sin necesidad de conmutación. Contadores de interfaz confirman procesamiento activo en simultáneo (ether3 en DIST-1 y ether4 en DIST-2 cursando más de 1.000 paquetes cada uno).
+- **Post-mortem:** Valida la eficiencia del diseño Active-Active eliminando equipamiento ocioso en la capa de Distribución.
 
 ---
 
@@ -246,29 +246,34 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 
 ### 6.1 Change log
 
-| Fecha      | Responsable           | Cambio                                                                              | Motivo                                       | Cómo se revierte                   |
-| ---------- | --------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------- | ---------------------------------- |
-| 08/10/2026 | R4 Moscuzza Vicente   | `ops(backup): backup post-F1 de DIST-1 y DIST-2`                                    | Despliegue F1 capa Distribución              | Restaurar snapshot `BASE_F1`       |
-| 08/10/2026 | R3 Di Grappa Emiliano | `ops(backup): agregar CORE1 y CORE2`                                                | Despliegue F1 capa Core                      | Restaurar snapshot `BASE_F1`       |
-| 08/10/2026 | R2 Capre Rodrigo      | `ops(backups): agrego ISPs`                                                         | Despliegue F1 proveedores                    | Restaurar snapshot `BASE_F1`       |
-| 09/10/2026 | R1 Alvite Damian      | `ops(backups): agrego la configuracion del router EDGE`                             | Despliegue F1 nodo EDGE                      | Restaurar snapshot `BASE_F1`       |
-| 09/10/2026 | R5 Elizalde Benjamin  | `docs(memoria): actualiza memoria a F1 con topologia, change log y restore probado` | Memoria de Fase 1                            | N/A (punto de recuperación)        |
-| 09/10/2026 | R5 Elizalde Benjamin  | `ops(backlog): snapshot BASE y actualizo backlog F1 a done`                         | Cierre de Fase 1                             | N/A (punto de recuperación)        |
-| 15/10/2026 | R4 Moscuzza Vicente   | `feat(dist): configuro VRRP v2 con auth y OSPF MD5 en DIST-1 y DIST-2`              | Gateways virtuales activos y ruteo interno   | Restaurar snapshot `BASE_F1`       |
-| 15/10/2026 | R3 Di Grappa Emiliano | `feat(core): configuro OSPF MD5 en area 0 y enlace core-core`                       | Habilitar tránsito IGP seguro en Core        | Restaurar snapshot `BASE_F1`       |
-| 15/10/2026 | R5 Elizalde Benjamin  | `fix(core): acomodo espacio de nombres en los archivos de CORE-2`                   | Arreglar nombres de archivos                 | N/A                                |
-| 15/10/2026 | R1 Alvite Damian      | `feat(edge): configuro OSPF MD5 hacia la capa Core`                                 | Anuncio de rutas internas al router de borde | Restaurar snapshot `BASE_F1`       |
-| 15/10/2026 | R5 Elizalde Benjamin  | `docs(capturas): agrego evidencias de adyacencias OSPF, VRRP y pings L3`            | Pruebas de aceptación F2                     | N/A                                |
-| 15/10/2026 | R5 Elizalde Benjamin  | `docs: actualizo change log, backlog y cierro hito F2 a done`                       | Respaldo y cierre formal de Fase 2           | Restaurar snapshot `F2`            |
-| 15/10/2026 | R2 Capre Rodrigo      | `fix(isp): elimino dhcp-client de fábrica y regenero exports de los ISPs`           | Regenerar exports ISP                        | Restaurar snapshot `BASE_F1`       |
-| 15/10/2026 | R1 Alvite Damian      | `fix(edge): elimino dhcp-client de fábrica y regenero export del EDGE`              | Regenerar export EDGE                        | Restaurar snapshot `BASE_F1`       |
-| 15/10/2026 | R5 Elizalde Benjamin  | `fix(hardening): remuevo dhcp-client del resto de routers y regenero los exports`   | Regenerar exports                            | Restaurar snapshot `BASE_F1`       |
-| 22/10/2026 | R1 Alvite Damian      | `feat(edge): configuro eBGP dual-homing, redistribución y firewall`                 | Borde redundante, inyección default y filtro | Restaurar snapshot `F2`            |
-| 22/10/2026 | R2 Capre Rodrigo      | `feat(isps): configuro eBGP, default-originate y anuncio de loopbacks`              | Conectividad WAN y salida a Internet         | Restaurar snapshot `F2`            |
-| 22/10/2026 | R5 Elizalde Benjamin  | `docs(capturas): agrego evidencias de eBGP, traceroute y firewall`                  | Validación L3 y verificación de F3           | N/A                                |
-| 22/10/2026 | R5 Elizalde Benjamin  | `docs(memoria): actualizo change log, conectividad y cierro hito F3`                | Respaldo y cierre formal de Fase 3           | Restaurar snapshot `F3`            |
-| 22/10/2026 | R3 Di Grappa Emiliano | `docs(drill1): runbook de failover VRRP por R3`               | Drill 1                                      | Restaurar snapshot `F4-PRE-DRILLS` |
-| 22/10/2026 | R5 Elizalde Benjamin | `docs: actualizo asignacion de drills F4 con rotacion de roles`               | Actualizar memoria y backlog                                      | N/A  |
+| Fecha      | Responsable           | Cambio                                                                              | Motivo                                        | Cómo se revierte                   |
+| ---------- | --------------------- | ----------------------------------------------------------------------------------- | --------------------------------------------- | ---------------------------------- |
+| 08/10/2026 | R4 Moscuzza Vicente   | `ops(backup): backup post-F1 de DIST-1 y DIST-2`                                    | Despliegue F1 capa Distribución               | Restaurar snapshot `BASE_F1`       |
+| 08/10/2026 | R3 Di Grappa Emiliano | `ops(backup): agregar CORE1 y CORE2`                                                | Despliegue F1 capa Core                       | Restaurar snapshot `BASE_F1`       |
+| 08/10/2026 | R2 Capre Rodrigo      | `ops(backups): agrego ISPs`                                                         | Despliegue F1 proveedores                     | Restaurar snapshot `BASE_F1`       |
+| 09/10/2026 | R1 Alvite Damian      | `ops(backups): agrego la configuracion del router EDGE`                             | Despliegue F1 nodo EDGE                       | Restaurar snapshot `BASE_F1`       |
+| 09/10/2026 | R5 Elizalde Benjamin  | `docs(memoria): actualiza memoria a F1 con topologia, change log y restore probado` | Memoria de Fase 1                             | N/A (punto de recuperación)        |
+| 09/10/2026 | R5 Elizalde Benjamin  | `ops(backlog): snapshot BASE y actualizo backlog F1 a done`                         | Cierre de Fase 1                              | N/A (punto de recuperación)        |
+| 15/10/2026 | R4 Moscuzza Vicente   | `feat(dist): configuro VRRP v2 con auth y OSPF MD5 en DIST-1 y DIST-2`              | Gateways virtuales activos y ruteo interno    | Restaurar snapshot `BASE_F1`       |
+| 15/10/2026 | R3 Di Grappa Emiliano | `feat(core): configuro OSPF MD5 en area 0 y enlace core-core`                       | Habilitar tránsito IGP seguro en Core         | Restaurar snapshot `BASE_F1`       |
+| 15/10/2026 | R5 Elizalde Benjamin  | `fix(core): acomodo espacio de nombres en los archivos de CORE-2`                   | Arreglar nombres de archivos                  | N/A                                |
+| 15/10/2026 | R1 Alvite Damian      | `feat(edge): configuro OSPF MD5 hacia la capa Core`                                 | Anuncio de rutas internas al router de borde  | Restaurar snapshot `BASE_F1`       |
+| 15/10/2026 | R5 Elizalde Benjamin  | `docs(capturas): agrego evidencias de adyacencias OSPF, VRRP y pings L3`            | Pruebas de aceptación F2                      | N/A                                |
+| 15/10/2026 | R5 Elizalde Benjamin  | `docs: actualizo change log, backlog y cierro hito F2 a done`                       | Respaldo y cierre formal de Fase 2            | Restaurar snapshot `F2`            |
+| 15/10/2026 | R2 Capre Rodrigo      | `fix(isp): elimino dhcp-client de fábrica y regenero exports de los ISPs`           | Regenerar exports ISP                         | Restaurar snapshot `BASE_F1`       |
+| 15/10/2026 | R1 Alvite Damian      | `fix(edge): elimino dhcp-client de fábrica y regenero export del EDGE`              | Regenerar export EDGE                         | Restaurar snapshot `BASE_F1`       |
+| 15/10/2026 | R5 Elizalde Benjamin  | `fix(hardening): remuevo dhcp-client del resto de routers y regenero los exports`   | Regenerar exports                             | Restaurar snapshot `BASE_F1`       |
+| 22/10/2026 | R1 Alvite Damian      | `feat(edge): configuro eBGP dual-homing, redistribución y firewall`                 | Borde redundante, inyección default y filtro  | Restaurar snapshot `F2`            |
+| 22/10/2026 | R2 Capre Rodrigo      | `feat(isps): configuro eBGP, default-originate y anuncio de loopbacks`              | Conectividad WAN y salida a Internet          | Restaurar snapshot `F2`            |
+| 22/10/2026 | R5 Elizalde Benjamin  | `docs(capturas): agrego evidencias de eBGP, traceroute y firewall`                  | Validación L3 y verificación de F3            | N/A                                |
+| 22/10/2026 | R5 Elizalde Benjamin  | `docs(memoria): actualizo change log, conectividad y cierro hito F3`                | Respaldo y cierre formal de Fase 3            | Restaurar snapshot `F3`            |
+| 22/10/2026 | R3 Di Grappa Emiliano | `docs(drill1): runbook de failover VRRP por R3`                                     | Drill 1                                       | Restaurar snapshot `F4-PRE-DRILLS` |
+| 22/10/2026 | R5 Elizalde Benjamin  | `docs: actualizo asignacion de drills F4 con rotacion de roles`                     | Actualizar memoria y backlog                  | N/A                                |
+| 22/10/2026 | R4 Moscuzza Vicente   | `docs(drill2): completo failover OSPF`                                              | Validación de redundancia IGP y core-core     | Restaurar snapshot `F4-PRE-DRILLS` |
+| 22/10/2026 | R2 Capre Rodrigo      | `docs(drill3): se realiza failover BGP`                                             | Validación de redundancia WAN multi-homing    | Restaurar snapshot `F4-PRE-DRILLS` |
+| 22/10/2026 | R1 Alvite Damian      | `docs(drill4): completa drill 4 check-gateway`                                      | Validación de failover estático por distancia | Restaurar snapshot `F4-PRE-DRILLS` |
+| 23/10/2026 | R5 Elizalde Benjamin  | `docs(drill5): load-sharing VRRP`                                                   | Validación de esquema Active-Active           | Restaurar snapshot `F4-PRE-DRILLS` |
+| 23/10/2026 | R5 Elizalde Benjamin  | `docs(snmp): habilito SNMP con usuario monitor y documento que se monitorea`        | Habilitar SNMP en usuarios monitos            | Restaurar snapshot `F4-PRE-DRILLS` |
 
 ### 6.2 Backups
 
@@ -282,7 +287,29 @@ Topología desplegada en GNS3 con las 5 capas funcionales (INTERNET, EDGE, CORE,
 
 ### 6.3 Monitoreo
 
-> Qué se monitorea (enlaces, vecinos OSPF, sesiones BGP, VRRP) y con qué (SNMP, chequeos).
+#### 1. Arquitectura de Monitoreo
+
+- **Protocolo:** SNMP v2c centralizado (RFC 1157, RFC 1905).
+- **Control de Acceso / Hardening:**
+  - Comunidad estándar de solo lectura: `monitor` (`read-access=yes`, `write-access=no`).
+  - Comunidad de fábrica deshabilitada: `public` (`disabled=yes`).
+  - Restricción de gestión: consultas habilitadas únicamente desde el plano de gestión interno.
+
+#### 2. Matriz de Métricas y OIDs Supervisados
+
+| Capa / Subsistema | Qué se monitorea | MIB / OID | Umbral de Alerta / Estado Crítico | Justificación Operativa |
+|---|---|---|---|---|
+| **Interfaces Físicas (Enlaces)** | Estado operativo del puerto (`ifOperStatus`) y de portadora | `IF-MIB` (`1.3.6.1.2.1.2.2.1.8`) | Valor != `up(1)` (Alerta inmediata) | Detección de caída de enlaces WAN (`ether1`/`ether2`), inter-core (`core-core`) y uplinks hacia distribución. |
+| **Interfaces Físicas (Tráfico)** | Contadores de bytes y descarte de paquetes | `IF-MIB` (`ifInOctets`, `ifOutOctets`, `ifInErrors`, `ifOutErrors`) | Incremento sostenido en `ifInErrors` o saturación de capacidad | Monitoreo de congestión y degradación de capa 1/2 en interfaces de distribución y Core. |
+| **Enrutamiento IGP (OSPF)** | Estado de adyacencia con routers vecinos | `OSPF-MIB` (`ospfNbrState`, `1.3.6.1.2.1.14.10.1.6`) | Estado != `full(8)` | Alerta temprana de reconvergencia en Área 0 (ej. corte de enlace entre EDGE y CORE-1 evaluado en Drill 2). |
+| **Enrutamiento EGP (BGP)** | Estado de las sesiones eBGP con ISP-1 e ISP-2 | `BGP4-MIB` (`bgpPeerState`, `1.3.6.1.2.1.15.3.1.2`) | Estado != `established(6)` | Detección de pérdida de sesión WAN multi-homing y retiro de prefijos por defecto (evaluado en Drill 3). |
+| **Primer Salto (VRRP)** | Estado de redundancia del gateway virtual | `VRRP-MIB` (`vrrpOperState`, `1.3.6.1.2.1.68.1.3.1.3`) | Conmutación de `master(2)` a `backup(1)` o traps de transición | Alerta de failover de gateway para USERS (VRID 10) o SERVERS (VRID 20) y verificación de esquema Active-Active. |
+| **Salud del Dispositivo** | Uso de CPU y memoria RAM libre | `MIKROTIK-MIB` (`mtxrHLCpuLoad`, `1.3.6.1.4.1.14988.1.1.1.2.1.1`) | CPU > 85% por más de 5 minutos | Control de planos de control ante tormentas de difusión o reconvergencias masivas. |
+
+#### 3. Estrategia de Alertas y Check-Gateway
+
+- **Polling proactivo:** Intervalos de sondeo cada 60 segundos sobre variables de estado de sesión (BGP/OSPF/VRRP).
+- **Monitoreo lógico de Capa 3 (Failover silencioso):** Mecanismo de `check-gateway=ping` hacia carriers aguas arriba cada 10 segundos (2 fallas consecutivas activan ruta de respaldo por distancia administrativa, evaluado en Drill 4).
 
 ---
 
